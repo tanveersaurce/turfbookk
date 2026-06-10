@@ -1,0 +1,19 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Local env files
+.env
+.env*.local
+
+# System/OS files
+.DS_Store
+Thumbs.db
+
+# User uploads/media directories
+uploads/
+public/uploads/
