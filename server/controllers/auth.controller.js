@@ -30,11 +30,12 @@ export const register = async (req, res, next) => {
     });
 
     // Generate token and set in cookie
-    generateToken(res, user._id, user.role);
+    const token = generateToken(res, user._id, user.role);
 
     // Respond first to ensure fast successful registration response
     res.status(201).json({
       success: true,
+      token,
       data: {
         _id: user._id,
         name: user.name,
@@ -88,10 +89,11 @@ export const login = async (req, res, next) => {
     }
 
     // Generate token and set in cookie
-    generateToken(res, user._id, user.role);
+    const token = generateToken(res, user._id, user.role);
 
     res.status(200).json({
       success: true,
+      token,
       data: {
         _id: user._id,
         name: user.name,

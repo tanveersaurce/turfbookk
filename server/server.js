@@ -44,8 +44,8 @@ app.use(cors({
 }));
 
 // Body Parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Cookie Parser (Required for HTTP-only JWT storage)
 app.use(cookieParser());
