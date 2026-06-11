@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { adminService } from '../../services/api';
 import { 
   LayoutDashboard, 
@@ -40,7 +41,9 @@ const getInitials = (name) => {
 export default function AdminDashboard() {
   const { user } = useSelector((state) => state.auth);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | owners | users | ads | settings
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('tb_admin_active_tab') || 'overview';
+  });
   const [adminData, setAdminData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -77,6 +80,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchAdminData();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tb_admin_active_tab', activeTab);
+  }, [activeTab]);
 
   const handleApproveOwner = async (appId) => {
     try {
@@ -527,55 +534,95 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
+              className="space-y-8"
             >
-              <div>
-                <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Owner Approval Queue</h2>
-                <p className="text-xs text-slate-500 font-medium">Approve new turf owners to enable listing creations on TurfBook.</p>
+              {/* Section 1: Owner Account Approvals */}
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Owner Account Approvals</h2>
+                  <p className="text-xs text-slate-500 font-medium">Approve new turf owners to enable listing creations on TurfBook.</p>
+                </div>
+
+                {pendingApps.length === 0 ? (
+                  <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+                    <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
+                    <p className="text-xs text-slate-400 mt-1">No pending partner applications found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {pendingApps.map((app) => (
+                      <div key={app._id || app.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between space-y-4 hover:border-slate-200 transition-all">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start">
+                            <h4 className="text-sm font-extrabold text-slate-800">{app.businessName}</h4>
+                            <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-100 text-amber-600 text-[8px] font-black uppercase">Pending Review</span>
+                          </div>
+                          <div className="space-y-1 text-xs text-slate-500 font-semibold">
+                            <p>Owner: <span className="text-slate-800">{app.name}</span> ({app.email})</p>
+                            <p>Phone: <span className="text-slate-800">{app.phone}</span></p>
+                            <p className="text-[11px] text-[#5D7A00] font-bold">Turf Address: {app.turfAddress}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex space-x-2 pt-2 border-t border-slate-100">
+                          <button 
+                            onClick={() => handleApproveOwner(app._id || app.id)}
+                            className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Approve Account</span>
+                          </button>
+                          <button 
+                            onClick={() => setRejectingAppId(app._id || app.id)}
+                            className="px-4 py-2 border border-red-100 hover:bg-red-50 text-red-500 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1 transition-all"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Reject</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {pendingApps.length === 0 ? (
-                <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
-                  <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                  <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
-                  <p className="text-xs text-slate-400 mt-1">No pending partner applications found.</p>
+              {/* Section 2: Turf Listing Approvals Queue */}
+              <div className="space-y-4 pt-6 border-t border-slate-200">
+                <div>
+                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Turf Listing Approvals</h2>
+                  <p className="text-xs text-slate-500 font-medium">Review and approve new turf listings submitted by venue owners.</p>
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {pendingApps.map((app) => (
-                    <div key={app._id || app.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between space-y-4 hover:border-slate-200 transition-all">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-start">
-                          <h4 className="text-sm font-extrabold text-slate-800">{app.businessName}</h4>
-                          <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-100 text-amber-600 text-[8px] font-black uppercase">Pending Review</span>
-                        </div>
-                        <div className="space-y-1 text-xs text-slate-500 font-semibold">
-                          <p>Owner: <span className="text-slate-800">{app.name}</span> ({app.email})</p>
-                          <p>Phone: <span className="text-slate-800">{app.phone}</span></p>
-                          <p className="text-[11px] text-[#5D7A00] font-bold">Turf Address: {app.turfAddress}</p>
-                        </div>
-                      </div>
 
-                      <div className="flex space-x-2 pt-2 border-t border-slate-100">
-                        <button 
-                          onClick={() => handleApproveOwner(app._id || app.id)}
-                          className="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition-all shadow-sm"
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Approve</span>
-                        </button>
-                        <button 
-                          onClick={() => setRejectingAppId(app._id || app.id)}
-                          className="px-4 py-2 border border-red-100 hover:bg-red-50 text-red-500 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1 transition-all"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                {turfs.filter(t => !t.isApproved).length === 0 ? (
+                  <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+                    <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                    <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
+                    <p className="text-xs text-slate-400 mt-1">No pending turf listings found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {turfs.filter(t => !t.isApproved).map((t) => (
+                      <Link 
+                        key={t._id || t.id}
+                        to={`/admin/review-turf/${t._id || t.id}`}
+                        className="p-5 bg-white border border-slate-200 hover:border-amber-400 rounded-2xl shadow-sm hover:shadow transition-all flex flex-col justify-between space-y-3 block group text-left"
+                      >
+                        <div className="space-y-1">
+                          <h4 className="text-xs font-black text-slate-800 group-hover:text-[#5D7A00] transition-colors truncate">{t.name}</h4>
+                          <p className="text-[10px] text-slate-500 font-bold truncate">Location: <span className="text-slate-850 font-extrabold">{t.area}, {t.city}</span></p>
+                          <p className="text-[10px] text-slate-500 font-bold">Owner: <span className="text-slate-850 font-extrabold">{t.owner?.name || 'Unknown'}</span></p>
+                        </div>
+                        
+                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-[10px] font-bold text-[#5D7A00] group-hover:underline">
+                          <span>Review Request &rarr;</span>
+                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-black uppercase text-[8px] tracking-wider">Pending</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
           )}
 
@@ -628,27 +675,27 @@ export default function AdminDashboard() {
                   {turfs.map(t => (
                     <div key={t._id || t.id} className="py-3.5 flex justify-between items-center text-xs">
                       <div className="min-w-0 pr-4">
-                        <span className="block font-extrabold text-slate-800 flex items-center space-x-2 truncate">
-                          <span className="truncate">{t.name}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 ${
-                            t.isApproved 
-                              ? 'bg-green-50 border border-green-100 text-[#5D7A00]' 
-                              : 'bg-amber-50 border border-amber-100 text-amber-600'
-                          }`}>
-                            {t.isApproved ? 'Approved' : 'Pending'}
+                        <Link to={`/admin/review-turf/${t._id || t.id}`} className="block group">
+                          <span className="block font-extrabold text-slate-800 group-hover:text-[#5D7A00] flex items-center space-x-2 truncate transition-colors">
+                            <span className="truncate">{t.name}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 ${
+                              t.isApproved 
+                                ? 'bg-green-50 border border-green-100 text-[#5D7A00]' 
+                                : 'bg-amber-50 border border-amber-100 text-amber-600'
+                            }`}>
+                              {t.isApproved ? 'Approved' : 'Pending'}
+                            </span>
                           </span>
-                        </span>
-                        <span className="block text-[10px] text-slate-400 font-semibold truncate">{t.area}, {t.city}</span>
+                          <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 font-semibold truncate transition-colors">{t.area}, {t.city}</span>
+                        </Link>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
-                        {!t.isApproved && (
-                          <button
-                            onClick={() => handleApproveTurf(t._id || t.id)}
-                            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] font-black rounded-xl text-[9px] transition-all shadow-sm"
-                          >
-                            Approve
-                          </button>
-                        )}
+                        <Link
+                          to={`/admin/review-turf/${t._id || t.id}`}
+                          className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] font-black rounded-xl text-[9px] transition-all shadow-sm"
+                        >
+                          Review Request
+                        </Link>
                         <button
                           onClick={() => handleToggleTurfFeature(t._id || t.id)}
                           className={`px-3 py-1.5 rounded-xl font-bold border transition-all text-[10px] ${

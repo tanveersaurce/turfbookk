@@ -107,20 +107,20 @@ export default function Home() {
   return (
     <div className="space-y-16 pb-20 overflow-x-hidden bg-[#FAFBFD] text-slate-800">
       {/* 1. HERO SECTION */}
-      <section className="relative py-12 md:py-20 bg-gradient-to-b from-[#FAFBFD]/30 to-[#FAFBFD] px-4 max-w-7xl mx-auto">
-        {/* Background Action Image with Light Overlay */}
+      <section className="relative py-12 md:py-20 bg-gradient-to-b from-[#FAFBFD]/30 to-[#FAFBFD] px-4 max-w-8xl mx-auto">
+        {/* Background Action Image with dark Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80" 
+            src="https://i.pinimg.com/736x/9c/b0/e1/9cb0e1ecc61b24d9a84c529ea80d661b.jpg" 
             alt="Sports background"
-            className="w-full h-full object-cover opacity-[0.03]"
+            className="w-full h-full"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#FAFBFD] via-[#FAFBFD]/80 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F1115] via-[#0F1115]/60 to-transparent"></div>
         </div>
 
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6">
           {/* Left Column: Heading & Badge */}
-          <div className="lg:col-span-7 space-y-6 text-left">
+          <div className="lg:col-span-8 space-y-6 text-left pl-10">
             {/* 5-Star Reviews Badge */}
             <div className="inline-flex items-center space-x-2 bg-slate-100 border border-slate-200 px-3.5 py-1.5 rounded-full">
               <div className="flex items-center space-x-0.5 text-[#FFC107]">
@@ -133,45 +133,45 @@ export default function Home() {
               <span className="text-xs text-slate-700 font-bold">10k+ reviews</span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black text-slate-900 leading-tight">
+            <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight">
               Book Your Turf, <br />
-              <span className="text-[#5D7A00]">Play Anytime</span>
+              <span className="text-primary">Play Anytime</span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 max-w-lg font-medium">
+            <p className="text-sm sm:text-base text-slate-400 max-w-lg font-medium">
               Find and book premium sports venues near you. Level up your game with our certified coaching programs and corporate tournaments.
             </p>
 
             {/* Quick trust metrics */}
-            <div className="flex items-center space-x-6 text-xs text-slate-500 pt-2 font-bold">
+            <div className="flex items-center space-x-6 text-xs text-slate-300 pt-2 font-bold">
               <div className="flex items-center space-x-1.5">
-                <ShieldCheck className="w-4.5 h-4.5 text-[#5D7A00]" /> 
+                <ShieldCheck className="w-4.5 h-4.5 text-primary" /> 
                 <span>Verified Arenas</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <Sparkles className="w-4.5 h-4.5 text-[#5D7A00]" /> 
+                <Sparkles className="w-4.5 h-4.5 text-primary" /> 
                 <span>Instant Confirmation</span>
               </div>
             </div>
           </div>
 
           {/* Right Column: Search Card Widget */}
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-slate-100 p-6 rounded-3xl shadow-xl space-y-5"
+              className="bg-white border border-slate-100 p-5 rounded-2xl shadow-xl space-y-4 max-w-[360px] mx-auto lg:ml-auto"
             >
               <div className="text-left">
-                <h3 className="text-lg font-black text-slate-900">Find a Venue</h3>
-                <p className="text-xs text-slate-500 font-semibold mt-0.5">Explore the best courts in your city</p>
+                <h3 className="text-base font-black text-slate-900">Find a Venue</h3>
+                <p className="text-[11px] text-slate-500 font-semibold mt-0.5">Explore the best courts in your city</p>
               </div>
 
-              <form onSubmit={handleSearch} className="space-y-4">
+              <form onSubmit={handleSearch} className="space-y-3.5">
                 {/* Location Input */}
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Location</label>
-                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
-                    <MapPin className="w-4.5 h-4.5 text-slate-400" />
+                <div className="space-y-0.5 text-left">
+                  <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Location</label>
+                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <MapPin className="w-4 h-4 text-slate-400" />
                     <select 
                       value={city} 
                       onChange={(e) => setCity(e.target.value)}
@@ -183,10 +183,10 @@ export default function Home() {
                 </div>
 
                 {/* Activity Dropdown */}
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Select Activity</label>
-                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
-                    <Award className="w-4.5 h-4.5 text-slate-400" />
+                <div className="space-y-0.5 text-left">
+                  <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Select Activity</label>
+                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <Award className="w-4 h-4 text-slate-400" />
                     <select 
                       className="bg-transparent text-xs text-slate-800 focus:outline-none w-full font-bold cursor-pointer"
                       onChange={(e) => {
@@ -203,10 +203,10 @@ export default function Home() {
                 </div>
 
                 {/* Sport Dropdown */}
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Sport</label>
-                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
-                    <Award className="w-4.5 h-4.5 text-slate-400" />
+                <div className="space-y-0.5 text-left">
+                  <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Sport</label>
+                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <Award className="w-4 h-4 text-slate-400" />
                     <select 
                       value={sport} 
                       onChange={(e) => setSport(e.target.value)}
@@ -218,10 +218,10 @@ export default function Home() {
                 </div>
 
                 {/* Date Selection */}
-                <div className="space-y-1 text-left">
-                  <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Date</label>
-                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
-                    <Calendar className="w-4.5 h-4.5 text-slate-400" />
+                <div className="space-y-0.5 text-left">
+                  <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Date</label>
+                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
+                    <Calendar className="w-4 h-4 text-slate-400" />
                     <input 
                       type="date"
                       min={new Date().toISOString().split('T')[0]}
@@ -235,9 +235,9 @@ export default function Home() {
                 {/* Find Venue Button */}
                 <button 
                   type="submit"
-                  className="w-full py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-[0_4px_15px_rgba(170,238,0,0.15)] flex items-center justify-center space-x-2 focus:outline-none"
+                  className="w-full py-3 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-[0_4px_15px_rgba(170,238,0,0.15)] flex items-center justify-center space-x-2 focus:outline-none"
                 >
-                  <Search className="w-4.5 h-4.5" />
+                  <Search className="w-4 h-4" />
                   <span>FIND VENUE</span>
                 </button>
               </form>
@@ -248,10 +248,10 @@ export default function Home() {
 
       {/* 2. AD BANNER */}
       {activeAd && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative rounded-2xl overflow-hidden h-40 sm:h-48 border border-slate-100 group shadow-md">
             <img 
-              src={activeAd.imageUrl} 
+              src="https://i.pinimg.com/1200x/c3/98/ae/c398aed6e0abdc94e540998649723cbe.jpg"
               alt={activeAd.title}
               className="w-full h-full object-cover group-hover:scale-101 transition-transform duration-700"
             />
@@ -271,7 +271,7 @@ export default function Home() {
       )}
 
       {/* 3. TOP SPORTS VENUES SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex justify-between items-end">
           <div className="text-left">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900">Top Sports Venues</h2>
@@ -301,7 +301,7 @@ export default function Home() {
       </section>
 
       {/* 4. POPULAR CITIES SECTION */}
-      <section id="cities" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section id="cities" className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex justify-between items-end">
           <div className="text-left">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900">Popular Cities</h2>
@@ -343,16 +343,16 @@ export default function Home() {
       </section>
 
       {/* 5. PRO COACHING BANNER SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl overflow-hidden min-h-[300px] flex items-center border border-slate-200 shadow-md p-8 sm:p-12 bg-white">
           {/* Action Background */}
           <div className="absolute inset-0 z-0">
             <img 
-              src="https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80" 
+              src="https://i.pinimg.com/1200x/df/e2/32/dfe2326abb45dbbdc051a2ec0b59d319.jpg" 
               alt="Soccer kick action"
-              className="w-full h-full object-cover opacity-[0.02]"
+              className="w-full h-full object-cover "
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FAFBFD] via-[#FAFBFD]/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FAFBFD] via-[#FAFBFD]/10 to-transparent"></div>
           </div>
 
           <div className="relative z-10 max-w-xl space-y-5 text-left">
@@ -376,7 +376,7 @@ export default function Home() {
       </section>
 
       {/* 6. SPORTS PROGRAMS & COURSES GRID */}
-      <section id="programs" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section id="programs" className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-left">
           <h2 className="text-xl sm:text-2xl font-black text-slate-900">Sports Programs & Courses</h2>
           <p className="text-xs text-slate-500 font-semibold mt-0.5">Learn from the pros and level up your game</p>
@@ -424,16 +424,16 @@ export default function Home() {
       </section>
 
       {/* 7. CORPORATE & BULK BOOKINGS SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl overflow-hidden min-h-[300px] flex items-center justify-end border border-slate-200 shadow-md p-8 sm:p-12 bg-white">
           {/* Action Background */}
           <div className="absolute inset-0 z-0">
             <img 
               src="https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&w=1200&q=80" 
               alt="Indoor court background"
-              className="w-full h-full object-cover opacity-[0.02]"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-l from-[#FAFBFD] via-[#FAFBFD]/80 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-l from-[#FAFBFD] via-[#FAFBFD]/20 to-transparent"></div>
           </div>
 
           <div className="relative z-10 max-w-xl space-y-5 text-right flex flex-col items-end">
@@ -458,7 +458,7 @@ export default function Home() {
 
       {/* 8. BECOME AN OWNER SECTION */}
       {user?.role !== 'user' && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-slate-100 border border-slate-200 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm text-left">
             <div className="space-y-1 max-w-xl">
               <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">

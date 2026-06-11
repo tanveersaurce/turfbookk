@@ -10,6 +10,7 @@ import TurfDetail from './pages/public/TurfDetail';
 import Checkout from './pages/public/Checkout';
 import { BookingConfirmed } from './pages/public/BookingConfirmed';
 import Cities from './pages/public/Cities';
+import ContactSupport from './pages/public/ContactSupport';
 
 // Auth Pages
 import Login from './pages/auth/Login';
@@ -21,6 +22,7 @@ import { ResetPassword } from './pages/auth/ResetPassword';
 import UserDashboard from './pages/user/UserDashboard';
 import OwnerDashboard from './pages/owner/OwnerDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ReviewTurf from './pages/admin/ReviewTurf';
 
 // Global Layout
 import Navbar from './components/common/Navbar';
@@ -48,6 +50,7 @@ function App() {
           <Route path="/search" element={<Search />} />
           <Route path="/cities" element={<Cities />} />
           <Route path="/turf/:id" element={<TurfDetail />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
           
           {/* Checkout (requires user authentication) */}
           <Route 
@@ -100,6 +103,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/review-turf/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <ReviewTurf />
               </ProtectedRoute>
             } 
           />

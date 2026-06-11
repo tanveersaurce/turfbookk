@@ -29,11 +29,11 @@ export default function AdminLogin() {
       const data = await authService.login({ email, password });
       
       // Enforce Super Admin Role Check
-      if (data.user?.role !== 'admin') {
+      if (data.data?.role !== 'admin') {
         throw new Error('Access denied. Super Admin credentials required.');
       }
 
-      dispatch(authSuccess(data));
+      dispatch(authSuccess({ user: data.data, token: data.token || localStorage.getItem('tb_token') }));
       navigate('/admin/dashboard');
     } catch (err) {
       dispatch(authFailure(err.message || 'Login failed. Please verify credentials.'));

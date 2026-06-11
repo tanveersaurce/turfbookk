@@ -9,7 +9,7 @@ export default function Footer() {
 
   return (
     <footer id="footer" className="bg-[#0D1117] border-t border-white/5 pt-16 pb-8 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`grid grid-cols-1 ${isPlayer ? 'md:grid-cols-4' : 'md:grid-cols-5'} gap-8 mb-12`}>
           {/* Col 1: About & Logo */}
           <div className="space-y-4">

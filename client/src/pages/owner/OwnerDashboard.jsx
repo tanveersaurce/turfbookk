@@ -23,7 +23,9 @@ import {
   Info,
   MapPin,
   Lock,
-  Clock
+  Clock,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -38,33 +40,102 @@ const getInitials = (name) => {
   return parts[0][0].toUpperCase();
 };
 
+const defaultImages = [
+  'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=800&q=80'
+];
+
+const sportsList = [
+  { id: 'football', label: 'Football', emoji: '⚽' },
+  { id: 'cricket', label: 'Cricket', emoji: '🏏' },
+  { id: 'box_cricket', label: 'Box Cricket', emoji: '🎯' },
+  { id: 'badminton', label: 'Badminton', emoji: '🏸' },
+  { id: 'basketball', label: 'Basketball', emoji: '🏀' },
+  { id: 'volleyball', label: 'Volleyball', emoji: '🏐' }
+];
+
+const amenitiesList = [
+  { id: 'parking', label: 'Parking', emoji: '🅿️' },
+  { id: 'washroom', label: 'Washroom', emoji: '🚾' },
+  { id: 'changing', label: 'Changing Room', emoji: '👕' },
+  { id: 'cafeteria', label: 'Cafeteria', emoji: '☕' },
+  { id: 'water', label: 'Water Cooler', emoji: '💧' },
+  { id: 'first_aid', label: 'First Aid', emoji: '🏥' },
+  { id: 'floodlights', label: 'Floodlights', emoji: '💡' },
+  { id: 'wifi', label: 'Free WiFi', emoji: '📶' },
+  { id: 'rental', label: 'Rental Equip', emoji: '🎫' },
+  { id: 'coaching', label: 'Coaching', emoji: '🎓' }
+];
+
+const convertTo24Hour = (timeStr) => {
+  if (!timeStr) return '06:00';
+  const parts = timeStr.split(' ');
+  if (parts.length < 2) return timeStr;
+  const time = parts[0];
+  const modifier = parts[1];
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+  if (modifier === 'PM') {
+    hours = parseInt(hours, 10) + 12;
+  }
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
+};
+
 export default function OwnerDashboard() {
   const { user } = useSelector((state) => state.auth);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | manage | bookings | earnings
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('tb_owner_active_tab') || 'overview';
+  });
+  const [showAddForm, setShowAddForm] = useState(() => {
+    return localStorage.getItem('tb_owner_show_add_form') === 'true';
+  });
+
+  const getDraft = () => {
+    try {
+      return JSON.parse(localStorage.getItem('tb_owner_draft_venue') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const draft = getDraft();
+
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Stepper state
+  const [formStep, setFormStep] = useState(draft.formStep !== undefined ? draft.formStep : 1);
+
   // Form states for turf listing
-  const [showAddForm, setShowAddForm] = useState(false);
   const [editingTurf, setEditingTurf] = useState(null);
 
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [city, setCity] = useState('Bhopal');
-  const [area, setArea] = useState('');
-  const [address, setAddress] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [sportsSelected, setSportsSelected] = useState(['Football']);
-  const [pricingFootball, setPricingFootball] = useState(800);
-  const [pricingCricket, setPricingCricket] = useState(1000);
-  const [pricingBadminton, setPricingBadminton] = useState(600);
+  const [name, setName] = useState(draft.name || '');
+  const [description, setDescription] = useState(draft.description || '');
+  const [city, setCity] = useState(draft.city || 'Bhopal');
+  const [area, setArea] = useState(draft.area || '');
+  const [address, setAddress] = useState(draft.address || '');
+  const [pincode, setPincode] = useState(draft.pincode || '');
+  const [landmark, setLandmark] = useState(draft.landmark || '');
+  const [sportsSelected, setSportsSelected] = useState(draft.sportsSelected || ['football']);
+  const [weekdayPrice, setWeekdayPrice] = useState(draft.weekdayPrice !== undefined ? draft.weekdayPrice : 1200);
+  const [weekendPrice, setWeekendPrice] = useState(draft.weekendPrice !== undefined ? draft.weekendPrice : 1500);
+  const [openTime, setOpenTime] = useState(draft.openTime || '06:00 AM');
+  const [closeTime, setCloseTime] = useState(draft.closeTime || '11:00 PM');
+  const [open24x7, setOpen24x7] = useState(draft.open24x7 !== undefined ? draft.open24x7 : false);
+  const [advancePercent, setAdvancePercent] = useState(draft.advancePercent !== undefined ? draft.advancePercent : 20);
+  const [amenitiesSelected, setAmenitiesSelected] = useState(draft.amenitiesSelected || []);
+  const [rules, setRules] = useState(draft.rules || '');
+  const [cancellationPolicy, setCancellationPolicy] = useState(draft.cancellationPolicy !== undefined ? draft.cancellationPolicy : true);
+  const [uploadedPhotos, setUploadedPhotos] = useState(draft.uploadedPhotos || []);
 
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
 
   const cities = ['Bhopal', 'Indore', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai'];
-  const availableSports = ['Football', 'Cricket', 'Box Cricket', 'Badminton', 'Basketball', 'Volleyball'];
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -82,25 +153,177 @@ export default function OwnerDashboard() {
     fetchDashboardData();
   }, [user]);
 
-  const handleCreateOrUpdateTurf = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    localStorage.setItem('tb_owner_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem('tb_owner_show_add_form', showAddForm);
+  }, [showAddForm]);
+
+  useEffect(() => {
+    if (showAddForm && !editingTurf) {
+      const draftObj = {
+        name,
+        description,
+        city,
+        area,
+        address,
+        pincode,
+        landmark,
+        sportsSelected,
+        weekdayPrice,
+        weekendPrice,
+        openTime,
+        closeTime,
+        open24x7,
+        advancePercent,
+        amenitiesSelected,
+        rules,
+        cancellationPolicy,
+        uploadedPhotos,
+        formStep
+      };
+      localStorage.setItem('tb_owner_draft_venue', JSON.stringify(draftObj));
+    }
+  }, [
+    showAddForm,
+    editingTurf,
+    name,
+    description,
+    city,
+    area,
+    address,
+    pincode,
+    landmark,
+    sportsSelected,
+    weekdayPrice,
+    weekendPrice,
+    openTime,
+    closeTime,
+    open24x7,
+    advancePercent,
+    amenitiesSelected,
+    rules,
+    cancellationPolicy,
+    uploadedPhotos,
+    formStep
+  ]);
+
+  const validateStep = (step) => {
     setFormError('');
     setFormSuccess('');
 
-    const pricing = {};
-    if (sportsSelected.includes('Football')) pricing.Football = Number(pricingFootball);
-    if (sportsSelected.includes('Cricket') || sportsSelected.includes('Box Cricket')) pricing.Cricket = Number(pricingCricket);
-    if (sportsSelected.includes('Badminton')) pricing.Badminton = Number(pricingBadminton);
+    if (step === 1) {
+      if (!name || !name.trim()) {
+        setFormError('Please enter a Turf Name.');
+        return false;
+      }
+      if (!description || !description.trim()) {
+        setFormError('Please enter a Description.');
+        return false;
+      }
+      if (description.trim().length < 20) {
+        setFormError('Description must be at least 20 characters long.');
+        return false;
+      }
+    }
+
+    if (step === 2) {
+      if (!city) {
+        setFormError('Please select a City.');
+        return false;
+      }
+      if (!area || !area.trim()) {
+        setFormError('Please enter a Locality / Area.');
+        return false;
+      }
+      if (!pincode || !pincode.trim()) {
+        setFormError('Please enter a Pincode.');
+        return false;
+      }
+      if (!/^\d{6}$/.test(pincode.trim())) {
+        setFormError('Pincode must be exactly 6 digits.');
+        return false;
+      }
+      if (!address || !address.trim()) {
+        setFormError('Please enter the Full Address.');
+        return false;
+      }
+    }
+
+    if (step === 3) {
+      if (sportsSelected.length === 0) {
+        setFormError('Please select at least one sport.');
+        return false;
+      }
+      if (!weekdayPrice || Number(weekdayPrice) <= 0) {
+        setFormError('Please enter a valid Weekday Pricing (greater than 0).');
+        return false;
+      }
+      if (!weekendPrice || Number(weekendPrice) <= 0) {
+        setFormError('Please enter a valid Weekend Pricing (greater than 0).');
+        return false;
+      }
+    }
+
+    if (step === 5) {
+      if (uploadedPhotos.length === 0) {
+        setFormError('Please upload at least one photo of your turf.');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleCreateOrUpdateTurf = async (e) => {
+    e.preventDefault();
+
+    // Validate all steps from 1 to 5
+    for (let step = 1; step <= 5; step++) {
+      if (!validateStep(step)) {
+        setFormStep(step);
+        return;
+      }
+    }
+
+    setFormError('');
+    setFormSuccess('');
+
+    // Map selected sports to supported enum values
+    const sports = sportsSelected.map(s => {
+      if (s === 'box_cricket') return 'cricket';
+      if (s === 'volleyball') return 'tennis';
+      return s;
+    }).filter(s => ['football', 'cricket', 'basketball', 'badminton', 'tennis'].includes(s));
+
+    if (sports.length === 0) {
+      setFormError('Please select at least one supported sport (Football, Cricket, Badminton, Basketball).');
+      return;
+    }
+
+    const fullStreetAddress = landmark 
+      ? `${address} (Landmark: ${landmark})`
+      : address;
 
     const turfPayload = {
       name,
       description,
       city,
       area,
-      address,
+      address: fullStreetAddress,
       pincode,
-      sports: sportsSelected,
-      pricing,
+      sports,
+      pricePerHour: Number(weekdayPrice) || 1200,
+      amenities: amenitiesSelected,
+      rules,
+      images: uploadedPhotos.length > 0 ? uploadedPhotos : defaultImages,
+      location: { lat: 23.2599, lng: 77.4126 }, // Default coordinates
+      operatingHours: {
+        open: open24x7 ? '00:00' : convertTo24Hour(openTime),
+        close: open24x7 ? '23:59' : convertTo24Hour(closeTime)
+      }
     };
 
     try {
@@ -134,11 +357,32 @@ export default function OwnerDashboard() {
     setCity(turf.city);
     setArea(turf.area);
     setAddress(turf.address);
-    setPincode(turf.pincode);
-    setSportsSelected(turf.sports);
-    setPricingFootball(turf.pricing?.Football || 800);
-    setPricingCricket(turf.pricing?.Cricket || 1000);
-    setPricingBadminton(turf.pricing?.Badminton || 600);
+    setPincode(turf.pincode || '');
+    
+    // Map sports back
+    setSportsSelected(turf.sports || []);
+    setWeekdayPrice(turf.pricePerHour || 1200);
+    setWeekendPrice((turf.pricePerHour || 1200) + 200);
+    
+    const mapTo12Hour = (time24) => {
+      if (!time24) return '06:00 AM';
+      const parts = time24.split(':');
+      if (parts.length < 2) return '06:00 AM';
+      const hrs = parseInt(parts[0], 10);
+      const minutes = parts[1];
+      const modifier = hrs >= 12 ? 'PM' : 'AM';
+      const formattedHrs = hrs % 12 === 0 ? 12 : hrs % 12;
+      return `${String(formattedHrs).padStart(2, '0')}:${minutes} ${modifier}`;
+    };
+    
+    setOpenTime(mapTo12Hour(turf.operatingHours?.open));
+    setCloseTime(mapTo12Hour(turf.operatingHours?.close));
+    setOpen24x7(turf.operatingHours?.open === '00:00' && turf.operatingHours?.close === '23:59');
+    
+    setAmenitiesSelected(turf.amenities || []);
+    setRules(turf.rules || '');
+    setUploadedPhotos(turf.images || []);
+    setFormStep(1);
     setShowAddForm(true);
   };
 
@@ -171,26 +415,29 @@ export default function OwnerDashboard() {
   };
 
   const resetFormFields = () => {
+    localStorage.removeItem('tb_owner_draft_venue');
+    localStorage.removeItem('tb_owner_show_add_form');
     setName('');
     setDescription('');
     setCity('Bhopal');
     setArea('');
     setAddress('');
     setPincode('');
-    setSportsSelected(['Football']);
-    setPricingFootball(800);
-    setPricingCricket(1000);
-    setPricingBadminton(600);
+    setLandmark('');
+    setSportsSelected(['football']);
+    setWeekdayPrice(1200);
+    setWeekendPrice(1500);
+    setOpenTime('06:00 AM');
+    setCloseTime('11:00 PM');
+    setOpen24x7(false);
+    setAdvancePercent(20);
+    setAmenitiesSelected([]);
+    setRules('');
+    setCancellationPolicy(true);
+    setUploadedPhotos([]);
+    setFormStep(1);
     setFormError('');
     setFormSuccess('');
-  };
-
-  const toggleSportSelection = (sportName) => {
-    if (sportsSelected.includes(sportName)) {
-      setSportsSelected(prev => prev.filter(s => s !== sportName));
-    } else {
-      setSportsSelected(prev => [...prev, sportName]);
-    }
   };
 
   if (loading || !dashboardData) {
@@ -214,7 +461,15 @@ export default function OwnerDashboard() {
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'manage', label: 'My Arenas', icon: Settings },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
-    { id: 'earnings', label: 'Earnings', icon: Landmark },
+    { id: 'earnings', label: 'Earnings', icon: Landmark }
+  ];
+
+  const steps = [
+    { num: 1, label: 'Info' },
+    { num: 2, label: 'Location' },
+    { num: 3, label: 'Sports' },
+    { num: 4, label: 'Rules' },
+    { num: 5, label: 'Photos' }
   ];
 
   return (
@@ -322,178 +577,452 @@ export default function OwnerDashboard() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -15 }}
-              className="p-8 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6 max-w-2xl text-left"
+              className="p-8 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-8 max-w-3xl text-left"
             >
-              <div>
-                <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">
-                  {editingTurf ? 'Edit Arena details' : 'List a New Sports Turf'}
-                </h3>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">Please provide correct location details and pricing grids.</p>
+              {/* Stepper Header Block */}
+              <div className="flex items-center justify-between max-w-lg mx-auto mb-8 relative">
+                <div className="absolute top-[18px] left-0 right-0 h-0.5 bg-slate-100 -z-10"></div>
+                {steps.map((s) => {
+                  const isCompleted = formStep > s.num;
+                  const isActive = formStep === s.num;
+                  return (
+                    <div key={s.num} className="flex flex-col items-center space-y-1">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all ${
+                        isCompleted 
+                          ? 'bg-green-500 border-green-500 text-white shadow-md shadow-green-100' 
+                          : isActive 
+                            ? 'bg-slate-900 border-slate-900 text-white shadow-md shadow-slate-200' 
+                            : 'bg-white border-slate-200 text-slate-400'
+                      }`}>
+                        {isCompleted ? <Check className="w-4.5 h-4.5 stroke-[3px]" /> : s.num}
+                      </div>
+                      <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isActive ? 'text-slate-900' : 'text-slate-400'}`}>
+                        {s.label}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
               {formError && (
                 <div className="p-3.5 bg-red-50 border border-red-100 text-red-650 rounded-2xl text-xs font-semibold flex items-center space-x-2">
-                  <Info className="w-4 h-4" />
+                  <AlertCircle className="w-4.5 h-4.5 flex-shrink-0" />
                   <span>{formError}</span>
                 </div>
               )}
 
               {formSuccess && (
                 <div className="p-3.5 bg-green-50 border border-green-100 text-[#5D7A00] rounded-2xl text-xs font-semibold flex items-center space-x-2">
-                  <Check className="w-4 h-4" />
+                  <Check className="w-4.5 h-4.5 flex-shrink-0" />
                   <span>{formSuccess}</span>
                 </div>
               )}
 
-              <form onSubmit={handleCreateOrUpdateTurf} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-700">Arena Name</label>
-                  <input 
-                    type="text" 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Bernabeu Box Sports"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-205 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] text-slate-800 font-semibold"
-                    required
-                  />
-                </div>
+              <form onSubmit={handleCreateOrUpdateTurf} className="space-y-6">
+                
+                {/* STEP 1: BASIC INFO */}
+                {formStep === 1 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Step 1: Basic Information</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Tell players all about your court, synthetic grass quality, and matches.</p>
+                    </div>
 
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-700">Arena Description</label>
-                  <textarea 
-                    rows={3}
-                    value={description} 
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Describe your court dimensions, artificial turf quality, cafe, floodlights etc."
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-205 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] text-slate-800 font-medium resize-none"
-                    required
-                  />
-                </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Turf Name</label>
+                      <input 
+                        type="text" 
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. Elite Arena"
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-semibold text-slate-800"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Description</label>
+                      <textarea 
+                        rows={5}
+                        value={description} 
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Tell players about your turf, the vibe, and special features..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-medium text-slate-800 resize-none"
+                        required
+                      />
+                      <div className="text-right text-[10px] text-slate-400 font-bold">
+                        {description.length}/1000
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700">City</label>
-                    <select 
-                      value={city} 
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-205 rounded-2xl px-3 py-3 text-xs text-slate-800 font-semibold focus:outline-none"
-                    >
-                      {cities.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700">Locality / Area</label>
-                    <input 
-                      type="text" 
-                      value={area} 
-                      onChange={(e) => setArea(e.target.value)}
-                      placeholder="e.g. Arera Colony"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-205 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] text-slate-800 font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
+                {/* STEP 2: LOCATION */}
+                {formStep === 2 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Step 2: Location Details</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Accurate venue location details help players find you easily.</p>
+                    </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2 space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700">Physical Address</label>
-                    <input 
-                      type="text" 
-                      value={address} 
-                      onChange={(e) => setAddress(e.target.value)}
-                      placeholder="Street name, landmark details"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-205 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] text-slate-800 font-semibold"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-700">Pincode</label>
-                    <input 
-                      type="text" 
-                      value={pincode} 
-                      onChange={(e) => setPincode(e.target.value)}
-                      placeholder="462001"
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-205 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] text-slate-800 font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-700">Supported Sports</label>
-                  <div className="flex flex-wrap gap-2">
-                    {availableSports.map((sport) => {
-                      const isSelected = sportsSelected.includes(sport);
-                      return (
-                        <button 
-                          key={sport}
-                          type="button"
-                          onClick={() => toggleSportSelection(sport)}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                            isSelected 
-                              ? 'bg-[#AAEE00]/10 border-[#AAEE00]/25 text-[#5D7A00]' 
-                              : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900'
-                          }`}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">City</label>
+                        <select 
+                          value={city} 
+                          onChange={(e) => setCity(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-3 text-xs text-slate-800 font-semibold focus:outline-none"
                         >
-                          {sport}
-                        </button>
-                      );
-                    })}
+                          {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Area</label>
+                        <input 
+                          type="text" 
+                          value={area} 
+                          onChange={(e) => setArea(e.target.value)}
+                          placeholder="e.g. Bandra West"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-semibold text-slate-800"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Pincode</label>
+                        <input 
+                          type="text" 
+                          value={pincode} 
+                          onChange={(e) => setPincode(e.target.value)}
+                          placeholder="400050"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-semibold text-slate-800"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Landmark</label>
+                        <input 
+                          type="text" 
+                          value={landmark} 
+                          onChange={(e) => setLandmark(e.target.value)}
+                          placeholder="e.g. Near Metro Station"
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-semibold text-slate-800"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Full Address</label>
+                      <textarea 
+                        rows={3}
+                        value={address} 
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Shop No, Building Name, Street..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-medium text-slate-800 resize-none"
+                        required
+                      />
+                    </div>
                   </div>
+                )}
+
+                {/* STEP 3: SPORTS & PRICING */}
+                {formStep === 3 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Step 3: Sports & Pricing</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Select playing sports, hour rates, operating hours and advance limits.</p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <label className="text-xs font-bold text-slate-700 block">Select Sports Offered</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {sportsList.map((sport) => {
+                          const isSelected = sportsSelected.includes(sport.id);
+                          return (
+                            <button
+                              key={sport.id}
+                              type="button"
+                              onClick={() => {
+                                if (sportsSelected.includes(sport.id)) {
+                                  setSportsSelected(prev => prev.filter(x => x !== sport.id));
+                                } else {
+                                  setSportsSelected(prev => [...prev, sport.id]);
+                                }
+                              }}
+                              className={`p-4 rounded-2xl border transition-all flex items-center space-x-3 text-xs font-bold ${
+                                isSelected 
+                                  ? 'bg-[#AAEE00]/10 border-[#AAEE00]/30 text-[#5D7A00] shadow-sm' 
+                                  : 'bg-white border-slate-200 text-slate-650 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="text-lg">{sport.emoji}</span>
+                              <span>{sport.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Weekday Pricing (₹/hr)</label>
+                        <input 
+                          type="number" 
+                          value={weekdayPrice} 
+                          onChange={(e) => setWeekdayPrice(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none font-bold text-slate-800"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Weekend Pricing (₹/hr)</label>
+                        <input 
+                          type="number" 
+                          value={weekendPrice} 
+                          onChange={(e) => setWeekendPrice(e.target.value)}
+                          className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none font-bold text-slate-800"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-xs font-bold text-slate-700">Operating Hours</label>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase">Open 24x7</span>
+                          <button
+                            type="button"
+                            onClick={() => setOpen24x7(!open24x7)}
+                            className="focus:outline-none"
+                          >
+                            {open24x7 ? (
+                              <ToggleRight className="w-8 h-8 text-[#5D7A00]" />
+                            ) : (
+                              <ToggleLeft className="w-8 h-8 text-slate-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {!open24x7 && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <select
+                            value={openTime}
+                            onChange={(e) => setOpenTime(e.target.value)}
+                            className="bg-slate-50 border border-slate-205 rounded-2xl px-3 py-3 text-xs text-slate-800 font-semibold focus:outline-none"
+                          >
+                            {['05:00 AM', '06:00 AM', '07:00 AM', '08:00 AM', '09:00 AM', '10:00 AM'].map(t => <option key={t} value={t}>Opens at: {t}</option>)}
+                          </select>
+                          <select
+                            value={closeTime}
+                            onChange={(e) => setCloseTime(e.target.value)}
+                            className="bg-slate-50 border border-slate-205 rounded-2xl px-3 py-3 text-xs text-slate-800 font-semibold focus:outline-none"
+                          >
+                            {['09:00 PM', '10:00 PM', '11:00 PM', '12:00 AM', '01:00 AM', '02:00 AM'].map(t => <option key={t} value={t}>Closes at: {t}</option>)}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2.5 pt-2">
+                      <div className="flex justify-between text-xs font-bold">
+                        <span className="text-slate-700">Advance Payment %</span>
+                        <span className="text-[#5D7A00]">Advance to be paid: ₹{Math.round((weekdayPrice * advancePercent) / 100)}</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        value={advancePercent} 
+                        onChange={(e) => setAdvancePercent(Number(e.target.value))}
+                        className="w-full accent-[#5D7A00] h-1 bg-slate-100 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="flex justify-between text-[9px] text-slate-400 font-black">
+                        <span>0%</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4: AMENITIES & RULES */}
+                {formStep === 4 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Step 4: Amenities & Rules</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Toggle facilities offered at the turf and configure arena guidelines.</p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <label className="text-xs font-bold text-slate-700 block">Select Amenities Offered</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                        {amenitiesList.map((amenity) => {
+                          const isSelected = amenitiesSelected.includes(amenity.label);
+                          return (
+                            <button
+                              key={amenity.id}
+                              type="button"
+                              onClick={() => {
+                                if (amenitiesSelected.includes(amenity.label)) {
+                                  setAmenitiesSelected(prev => prev.filter(x => x !== amenity.label));
+                                } else {
+                                  setAmenitiesSelected(prev => [...prev, amenity.label]);
+                                }
+                              }}
+                              className={`p-3 rounded-2xl border transition-all flex flex-col items-center justify-center space-y-1.5 text-[9px] font-black uppercase text-center ${
+                                isSelected 
+                                  ? 'bg-[#AAEE00]/10 border-[#AAEE00]/30 text-[#5D7A00] shadow-sm' 
+                                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                              }`}
+                            >
+                              <span className="text-xl mb-0.5">{amenity.emoji}</span>
+                              <span className="truncate w-full">{amenity.id}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Rules & Regulations</label>
+                      <textarea 
+                        rows={4}
+                        value={rules} 
+                        onChange={(e) => setRules(e.target.value)}
+                        placeholder="e.g. Non-marking shoes only, No smoking..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:border-[#5D7A00] font-medium text-slate-800 resize-none"
+                      />
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+                      <div>
+                        <span className="block text-xs font-bold text-slate-850">Cancellation Policy</span>
+                        <span className="block text-[10px] text-slate-400 font-bold mt-0.5">Allow users to cancel up to 24 hours before</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCancellationPolicy(!cancellationPolicy)}
+                        className="focus:outline-none"
+                      >
+                        {cancellationPolicy ? (
+                          <ToggleRight className="w-8 h-8 text-[#5D7A00]" />
+                        ) : (
+                          <ToggleLeft className="w-8 h-8 text-slate-350" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 5: PHOTOS */}
+                {formStep === 5 && (
+                  <div className="space-y-5">
+                    <div className="border-b border-slate-100 pb-3">
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Step 5: Photos</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Upload high-resolution images of your turf to grab attention.</p>
+                    </div>
+
+                    <div className="p-8 border-2 border-dashed border-slate-200 rounded-3xl flex flex-col items-center justify-center space-y-2.5 text-center bg-slate-50 hover:bg-slate-100 transition-all cursor-pointer relative">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files);
+                          files.forEach(file => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              setUploadedPhotos(prev => [...prev, reader.result]);
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                        }}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <div className="w-12 h-12 rounded-full bg-slate-200/80 flex items-center justify-center text-slate-600 shadow-inner">
+                        <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="block text-xs font-bold text-slate-700">Click or Drag to Upload Photos</span>
+                        <span className="block text-[9px] text-slate-400 font-bold mt-0.5">High quality images increase bookings by 40%</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      {(uploadedPhotos.length > 0 ? uploadedPhotos : defaultImages).map((photo, index) => (
+                        <div key={index} className="relative aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-sm group">
+                          <img src={photo} className="w-full h-full object-cover" alt="Uploaded Turf" />
+                          {index === 0 && (
+                            <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#5D7A00] text-white text-[8px] font-black uppercase rounded-md shadow-md">
+                              Cover Photo
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUploadedPhotos(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute top-2 right-2 p-1 bg-red-500 hover:bg-red-650 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Bottom Wizard Controls */}
+                <div className="flex justify-between items-center pt-6 border-t border-slate-100 mt-6">
+                  {formStep > 1 ? (
+                    <button
+                      type="button"
+                      onClick={() => setFormStep(prev => prev - 1)}
+                      className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all"
+                    >
+                      Back
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { resetFormFields(); setShowAddForm(false); }}
+                      className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all"
+                    >
+                      Cancel
+                    </button>
+                  )}
+
+                  {formStep < 5 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (validateStep(formStep)) {
+                          setFormStep(prev => prev + 1);
+                        }
+                      }}
+                      className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] font-black rounded-xl text-xs transition-all uppercase tracking-wider"
+                    >
+                      Next
+                    </button>
+                  ) : (
+                    <div className="flex flex-col items-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-[#AAEE00] hover:bg-[#BBEF11] text-slate-900 font-black rounded-xl text-xs shadow-md transition-all uppercase tracking-wider"
+                      >
+                        {editingTurf ? 'Submit Edits' : 'Submit for Approval 🚀'}
+                      </button>
+                      <span className="text-[9px] text-slate-400 font-bold mt-1.5">*Your turf will be reviewed by an admin within 24 hours.</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Dynamic pricing fields */}
-                <div className="grid grid-cols-3 gap-4 pt-2">
-                  {sportsSelected.includes('Football') && (
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Football (₹/hr)</label>
-                      <input 
-                        type="number" 
-                        value={pricingFootball}
-                        onChange={(e) => setPricingFootball(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-bold"
-                      />
-                    </div>
-                  )}
-                  {(sportsSelected.includes('Cricket') || sportsSelected.includes('Box Cricket')) && (
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cricket (₹/hr)</label>
-                      <input 
-                        type="number" 
-                        value={pricingCricket}
-                        onChange={(e) => setPricingCricket(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-bold"
-                      />
-                    </div>
-                  )}
-                  {sportsSelected.includes('Badminton') && (
-                    <div className="space-y-1">
-                      <label className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Badminton (₹/hr)</label>
-                      <input 
-                        type="number" 
-                        value={pricingBadminton}
-                        onChange={(e) => setPricingBadminton(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 font-bold"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] font-black rounded-xl text-xs shadow-md transition-all uppercase tracking-wider"
-                  >
-                    {editingTurf ? 'Save Edits' : 'Submit Listing'}
-                  </button>
-                </div>
               </form>
             </motion.div>
           ) : (
@@ -562,7 +1091,7 @@ export default function OwnerDashboard() {
                     </div>
                   </div>
 
-                  {/* Split Section: Chart + Peak Hours */}
+                  {/* Split Section */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
                     {/* SVG Chart */}
@@ -587,18 +1116,15 @@ export default function OwnerDashboard() {
                             </linearGradient>
                           </defs>
                           
-                          {/* Horizontal Lines */}
                           <line x1="0" y1="180" x2="600" y2="180" stroke="#F1F5F9" strokeWidth="1" />
                           <line x1="0" y1="120" x2="600" y2="120" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4 4" />
                           <line x1="0" y1="60" x2="600" y2="60" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4 4" />
 
-                          {/* Area */}
                           <path 
                             d="M0,180 Q60,110 120,130 T240,70 T360,90 T480,40 T600,30 L600,180 L0,180 Z" 
                             fill="url(#ownerChartGlow)" 
                           />
 
-                          {/* Line */}
                           <path 
                             d="M0,180 Q60,110 120,130 T240,70 T360,90 T480,40 T600,30" 
                             fill="none" 
@@ -607,7 +1133,6 @@ export default function OwnerDashboard() {
                             strokeLinecap="round"
                           />
 
-                          {/* Dots */}
                           <circle cx="120" cy="130" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
                           <circle cx="240" cy="70" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
                           <circle cx="360" cy="90" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
@@ -665,7 +1190,7 @@ export default function OwnerDashboard() {
                     {bookings.length === 0 ? (
                       <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
                         <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                        <p className="text-xs text-slate-400">No booking records found.</p>
+                        <p className="text-xs text-slate-405">No booking records found.</p>
                       </div>
                     ) : (
                       <div className="overflow-x-auto">
@@ -689,7 +1214,7 @@ export default function OwnerDashboard() {
                                     <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-[10px] border border-slate-200">
                                       {initials}
                                     </div>
-                                    <span className="font-semibold text-slate-800 truncate max-w-[120px]">{booking.userId || 'Guest User'}</span>
+                                    <span className="font-semibold text-slate-805 truncate max-w-[120px]">{booking.userId || 'Guest User'}</span>
                                   </td>
                                   <td className="py-3.5 px-4 text-slate-600 font-medium">{booking.turfName || 'Sports Arena'}</td>
                                   <td className="py-3.5 px-4">
@@ -740,8 +1265,8 @@ export default function OwnerDashboard() {
                 >
                   <div className="space-y-4">
                     {turfs.map((turf) => (
-                      <div key={turf.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6 hover:border-slate-200 transition-all">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+                      <div key={turf.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6 hover:border-slate-200 transition-all text-left">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                           <div className="flex items-center space-x-4 min-w-0">
                             <img src={turf.images?.[0] || 'https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=300&q=80'} className="w-16 h-16 rounded-2xl object-cover border border-slate-100 shrink-0" />
                             <div className="min-w-0">
@@ -755,15 +1280,14 @@ export default function OwnerDashboard() {
                                   {turf.isApproved ? 'Approved' : 'Pending Approval'}
                                 </span>
                               </h3>
-                              <span className="block text-xs text-slate-400 font-semibold mt-0.5">{turf.area}, {turf.city}</span>
+                              <span className="block text-xs text-slate-405 font-semibold mt-0.5">{turf.area}, {turf.city}</span>
                             </div>
                           </div>
 
-                          {/* Fast Actions */}
                           <div className="flex space-x-2 self-start sm:self-auto">
                             <button 
                               onClick={() => startEdit(turf)}
-                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-500 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
+                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-550 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
                               title="Edit Basic Info"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -771,7 +1295,7 @@ export default function OwnerDashboard() {
                             </button>
                             <button 
                               onClick={() => toggleTurfActive(turf)}
-                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-500 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
+                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-550 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
                               title={turf.isActive ? 'Deactivate Listing' : 'Activate Listing'}
                             >
                               {turf.isActive ? (
@@ -789,9 +1313,8 @@ export default function OwnerDashboard() {
                           </div>
                         </div>
 
-                        {/* Schedule builder & slot blocker if approved */}
                         {turf.isApproved && (
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-slate-100 text-left">
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
                             <div className="bg-slate-50 p-6 rounded-2xl border border-slate-150 shadow-sm">
                               <WeeklyScheduleBuilder 
                                 initialSchedule={turf.weeklySchedule} 
@@ -861,7 +1384,7 @@ export default function OwnerDashboard() {
                                   <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-[10px] border border-slate-200">
                                     {initials}
                                   </div>
-                                  <span className="font-semibold text-slate-805 truncate max-w-[120px]">{booking.userId || 'Guest User'}</span>
+                                  <span className="font-semibold text-slate-850 truncate max-w-[120px]">{booking.userId || 'Guest User'}</span>
                                 </td>
                                 <td className="py-3.5 px-4 text-slate-600 font-medium">{booking.turfName || 'Sports Arena'}</td>
                                 <td className="py-3.5 px-4">
@@ -872,7 +1395,7 @@ export default function OwnerDashboard() {
                                 <td className="py-3.5 px-4 text-slate-500">
                                   <div className="flex flex-col space-y-0.5">
                                     <span className="font-semibold">{booking.date}</span>
-                                    <span className="text-[10px] text-slate-404 font-semibold">{(booking.slots || []).join(', ')}</span>
+                                    <span className="text-[10px] text-slate-400 font-semibold">{(booking.slots || []).join(', ')}</span>
                                   </div>
                                 </td>
                                 <td className="py-3.5 px-4 text-right text-slate-800 font-bold">
@@ -909,7 +1432,6 @@ export default function OwnerDashboard() {
                   exit={{ opacity: 0, y: -10 }}
                   className="grid grid-cols-1 lg:grid-cols-3 gap-6"
                 >
-                  {/* Wallet Balance Card */}
                   <div className="p-8 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col justify-between h-60 text-left">
                     <div className="space-y-2">
                       <span className="block text-[10px] text-slate-400 font-bold uppercase tracking-wider">Settlement Wallet Balance</span>
@@ -925,7 +1447,6 @@ export default function OwnerDashboard() {
                     </button>
                   </div>
 
-                  {/* Simulated Ledger transactions */}
                   <div className="lg:col-span-2 p-6 bg-white border border-slate-100 rounded-3xl space-y-4 shadow-sm text-left">
                     <div>
                       <h4 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Settlement & Payouts History</h4>

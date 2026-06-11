@@ -53,7 +53,7 @@ export default function Navbar() {
         ? 'bg-white/95 backdrop-blur-md border-b border-slate-100 py-3 shadow-sm' 
         : 'bg-white border-b border-slate-100 py-4'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
@@ -80,9 +80,9 @@ export default function Navbar() {
                 <a href="/#programs" className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                   Programs
                 </a>
-                <a href="#footer" className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
+                <Link to="/contact-support" className={`text-sm font-semibold transition-colors ${location.pathname === '/contact-support' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
                   Contact
-                </a>
+                </Link>
               </>
             )}
             {user?.role === 'owner' && (
@@ -252,12 +252,12 @@ export default function Navbar() {
           >
             <div className="px-4 py-4 space-y-3">
               <Link to="/" className="block py-2 text-base font-semibold text-slate-800">Home</Link>
-              <Link to="/search" className="block py-2 text-base font-semibold text-slate-800">Book</Link>
+              <Link to="/search" className="block py-2 text-base font-semibold text-slate-800">Fields</Link>
               
               {user?.role !== 'owner' && (
                 <>
                   <a href="/#programs" className="block py-2 text-base font-semibold text-slate-800">Programs</a>
-                  <a href="#footer" className="block py-2 text-base font-semibold text-slate-800">Contact</a>
+                  <Link to="/contact-support" className="block py-2 text-base font-semibold text-slate-800">Contact</Link>
                 </>
               )}
 
