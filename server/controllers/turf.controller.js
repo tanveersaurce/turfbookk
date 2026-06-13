@@ -69,7 +69,7 @@ export const getTurfById = async (req, res, next) => {
 // @access  Private (Owner only)
 export const createTurf = async (req, res, next) => {
   try {
-    const { name, description, address, city, area, location, sports, pricePerHour, amenities, rules, operatingHours } = req.body;
+    const { name, description, address, city, area, location, sports, pricePerHour, amenities, rules, operatingHours, images } = req.body;
 
     const turf = await Turf.create({
       owner: req.user.id,
@@ -84,6 +84,7 @@ export const createTurf = async (req, res, next) => {
       amenities,
       rules,
       operatingHours,
+      images,
     });
 
     // Automatically generate slots for the next 7 days upon creation

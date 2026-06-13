@@ -310,7 +310,9 @@ export const adminService = {
         city: t.city,
         area: t.area,
         isApproved: t.isApproved,
-        isFeatured: t.rating >= 4.7
+        isFeatured: t.rating >= 4.7,
+        images: t.images,
+        owner: t.owner
       })),
       bookings: bookings.map(b => ({
         id: b._id,
