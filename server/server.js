@@ -35,6 +35,8 @@ initSocket(server);
 // Security Headers with Helmet
 app.use(helmet({
   contentSecurityPolicy: false, // Turn off CSP for easy local testing/loading assets
+  crossOriginResourcePolicy: false, // Allow cross-origin images (Unsplash, Cloudinary, etc.) to load
+  crossOriginEmbedderPolicy: false,
 }));
 
 // CORS Configuration

@@ -606,17 +606,21 @@ export default function AdminDashboard() {
                       <Link 
                         key={t._id || t.id}
                         to={`/admin/review-turf/${t._id || t.id}`}
-                        className="p-5 bg-white border border-slate-200 hover:border-amber-400 rounded-2xl shadow-sm hover:shadow transition-all flex flex-col justify-between space-y-3 block group text-left"
+                        className="p-5 bg-white border border-slate-200 hover:border-amber-400 rounded-2xl shadow-sm hover:shadow transition-all flex flex-row items-center space-x-4 block group text-left"
                       >
-                        <div className="space-y-1">
+                        <img 
+                          src={t.images?.[0] || 'https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=300&q=80'} 
+                          className="w-16 h-16 rounded-2xl object-cover border border-slate-100 shrink-0" 
+                        />
+                        <div className="flex-1 min-w-0 space-y-1">
                           <h4 className="text-xs font-black text-slate-800 group-hover:text-[#5D7A00] transition-colors truncate">{t.name}</h4>
                           <p className="text-[10px] text-slate-500 font-bold truncate">Location: <span className="text-slate-850 font-extrabold">{t.area}, {t.city}</span></p>
                           <p className="text-[10px] text-slate-500 font-bold">Owner: <span className="text-slate-850 font-extrabold">{t.owner?.name || 'Unknown'}</span></p>
-                        </div>
-                        
-                        <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 text-[10px] font-bold text-[#5D7A00] group-hover:underline">
-                          <span>Review Request &rarr;</span>
-                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-black uppercase text-[8px] tracking-wider">Pending</span>
+                          
+                          <div className="flex items-center justify-between pt-1 text-[10px] font-bold text-[#5D7A00] group-hover:underline">
+                            <span>Review Request &rarr;</span>
+                            <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-black uppercase text-[8px] tracking-wider">Pending</span>
+                          </div>
                         </div>
                       </Link>
                     ))}
@@ -674,20 +678,26 @@ export default function AdminDashboard() {
                 <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1">
                   {turfs.map(t => (
                     <div key={t._id || t.id} className="py-3.5 flex justify-between items-center text-xs">
-                      <div className="min-w-0 pr-4">
-                        <Link to={`/admin/review-turf/${t._id || t.id}`} className="block group">
-                          <span className="block font-extrabold text-slate-800 group-hover:text-[#5D7A00] flex items-center space-x-2 truncate transition-colors">
-                            <span className="truncate">{t.name}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 ${
-                              t.isApproved 
-                                ? 'bg-green-50 border border-green-100 text-[#5D7A00]' 
-                                : 'bg-amber-50 border border-amber-100 text-amber-600'
-                            }`}>
-                              {t.isApproved ? 'Approved' : 'Pending'}
+                      <div className="flex items-center space-x-3.5 min-w-0 pr-4">
+                        <img 
+                          src={t.images?.[0] || 'https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=300&q=80'} 
+                          className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0" 
+                        />
+                        <div className="min-w-0">
+                          <Link to={`/admin/review-turf/${t._id || t.id}`} className="block group">
+                            <span className="block font-extrabold text-slate-800 group-hover:text-[#5D7A00] flex items-center space-x-2 truncate transition-colors">
+                              <span className="truncate">{t.name}</span>
+                              <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 ${
+                                t.isApproved 
+                                  ? 'bg-green-50 border border-green-100 text-[#5D7A00]' 
+                                  : 'bg-amber-50 border border-amber-100 text-amber-600'
+                              }`}>
+                                {t.isApproved ? 'Approved' : 'Pending'}
+                              </span>
                             </span>
-                          </span>
-                          <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 font-semibold truncate transition-colors">{t.area}, {t.city}</span>
-                        </Link>
+                            <span className="block text-[10px] text-slate-400 group-hover:text-slate-500 font-semibold truncate transition-colors">{t.area}, {t.city}</span>
+                          </Link>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
                         <Link

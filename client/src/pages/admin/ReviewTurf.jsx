@@ -139,7 +139,8 @@ export default function ReviewTurf() {
   }
 
   // Fallback images
-  const imagesList = turf.images?.length > 0 ? turf.images : [
+  const validImages = turf.images?.filter(img => img && typeof img === 'string' && img.trim().length > 0) || [];
+  const imagesList = validImages.length > 0 ? validImages : [
     'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&w=800&q=80',
     'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?auto=format&fit=crop&w=800&q=80'
@@ -401,8 +402,8 @@ export default function ReviewTurf() {
 
             {/* Sports Pills */}
             <div className="flex flex-wrap gap-2">
-              {(turf.sports || ['football', 'cricket', 'badminton']).map(sport => (
-                <span key={sport} className="px-3 py-1 bg-[#AAEE00] text-black font-extrabold text-[10px] uppercase rounded-full shadow-sm">
+              {(turf.sports || ['football', 'cricket', 'badminton']).map((sport, index) => (
+                <span key={`${sport}-${index}`} className="px-3 py-1 bg-[#AAEE00] text-black font-extrabold text-[10px] uppercase rounded-full shadow-sm">
                   {sport}
                 </span>
               ))}
