@@ -1,11 +1,15 @@
 import { v2 as cloudinary } from 'cloudinary';
 
 // Configure Cloudinary credentials
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'default_cloud',
-  api_key: process.env.CLOUDINARY_API_KEY || 'default_key',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'default_secret',
-});
+if (process.env.CLOUDINARY_URL) {
+  // Cloudinary automatically configures itself from the CLOUDINARY_URL environment variable.
+} else {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'default_cloud',
+    api_key: process.env.CLOUDINARY_API_KEY || 'default_key',
+    api_secret: process.env.CLOUDINARY_API_SECRET || 'default_secret',
+  });
+}
 
 /**
  * Uploads a file buffer to a specific Cloudinary folder.

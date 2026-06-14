@@ -173,3 +173,222 @@ export const bookingConfirmationEmail = (booking, user, turf) => {
     </html>
   `;
 };
+
+export const applicationReceivedEmail = (applicantName, applicationId, turfName) => {
+  const statusLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/become-partner/status?id=${applicationId}`;
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #191c1d; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background-color: #1A1A1A; padding: 30px; text-align: center; }
+          .header h1 { color: #AAEE00; margin: 0; font-size: 28px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .content h2 { font-size: 22px; margin-top: 0; font-weight: 700; color: #1A1A1A; }
+          .content p { font-size: 16px; line-height: 24px; color: #5f5e5e; }
+          .id-box { background-color: #f1f5f9; border-left: 4px solid #AAEE00; padding: 15px; margin: 20px 0; border-radius: 6px; }
+          .id-box p { margin: 0; font-size: 14px; color: #1e293b; font-weight: 700; }
+          .id-val { font-size: 20px; color: #1A1A1A; font-family: monospace; display: block; margin-top: 5px; }
+          .btn-container { text-align: center; margin-top: 30px; }
+          .btn { background-color: #AAEE00; color: #1A1A1A; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #edeeef; }
+          .footer p { font-size: 12px; color: #c8c6c5; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>TurfBook</h1>
+          </div>
+          <div class="content">
+            <h2>Application Received!</h2>
+            <p>Dear ${applicantName},</p>
+            <p>Thank you for submitting your partner application to list <strong>${turfName}</strong> on TurfBook. We are excited about the possibility of partnering with you.</p>
+            
+            <div class="id-box">
+              <p>YOUR APPLICATION ID:</p>
+              <span class="id-val">${applicationId}</span>
+            </div>
+
+            <p>Our verification team will review your credentials and turf details within <strong>24 to 48 hours</strong>. You can track your application status anytime using the link below:</p>
+            
+            <div class="btn-container">
+              <a href="${statusLink}" class="btn">Check Application Status</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} TurfBook. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+export const applicationApprovedEmail = (ownerName, turfName, loginEmail, generatedPassword, ownerPanelUrl) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #191c1d; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background-color: #AAEE00; padding: 35px 30px; text-align: center; }
+          .header h1 { color: #1A1A1A; margin: 0; font-size: 28px; font-weight: 900; }
+          .content { padding: 40px 30px; }
+          .content h2 { font-size: 22px; margin-top: 0; font-weight: 700; color: #1A1A1A; }
+          .content p { font-size: 16px; line-height: 24px; color: #5f5e5e; }
+          .credentials-box { background-color: #1A1A1A; color: #ffffff; padding: 20px; margin: 25px 0; border-radius: 10px; border-left: 4px solid #AAEE00; }
+          .credentials-box h3 { margin-top: 0; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; tracking-wider; color: #AAEE00; }
+          .cred-row { margin-bottom: 10px; font-size: 15px; }
+          .cred-row strong { color: #cfcfcf; }
+          .cred-val { font-family: monospace; font-weight: bold; color: #AAEE00; font-size: 16px; }
+          .warning { padding: 15px; background-color: #fffbeb; border-left: 4px solid #d97706; border-radius: 6px; margin-top: 25px; }
+          .warning p { color: #b45309; margin: 0; font-size: 13px; font-weight: 600; }
+          .btn-container { text-align: center; margin-top: 30px; }
+          .btn { background-color: #AAEE00; color: #1A1A1A; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #edeeef; }
+          .footer p { font-size: 12px; color: #c8c6c5; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Application Approved!</h1>
+          </div>
+          <div class="content">
+            <h2>Welcome to the TurfBook Network, ${ownerName}!</h2>
+            <p>We are thrilled to inform you that your application for <strong>${turfName}</strong> has been approved. Your venue listing is now officially live on TurfBook!</p>
+            
+            <p>An owner account has been generated for you. Use the temporary credentials below to log in:</p>
+            
+            <div class="credentials-box">
+              <h3>Your Login Credentials</h3>
+              <div class="cred-row"><strong>Email:</strong> ${loginEmail}</div>
+              <div class="cred-row"><strong>Password:</strong> <span class="cred-val">${generatedPassword}</span></div>
+            </div>
+
+            <div class="warning">
+              <p>🔒 Security Reminder: You will be prompted to set a new, secure password immediately upon your first login.</p>
+            </div>
+
+            <div class="btn-container">
+              <a href="${ownerPanelUrl}" class="btn">Login to Owner Panel</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} TurfBook. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+export const applicationRejectedEmail = (applicantName, turfName, rejectionReason) => {
+  const reapplyLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/become-partner/apply`;
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #191c1d; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background-color: #ba1a1a; padding: 30px; text-align: center; }
+          .header h1 { color: #ffffff; margin: 0; font-size: 26px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .content h2 { font-size: 22px; margin-top: 0; font-weight: 700; color: #1A1A1A; }
+          .content p { font-size: 16px; line-height: 24px; color: #5f5e5e; }
+          .reason-box { background-color: #f8fafc; border-left: 4px solid #64748b; padding: 16px; margin: 20px 0; border-radius: 8px; }
+          .reason-box p { margin: 0; font-size: 14px; color: #475569; font-weight: 550; line-height: 20px; }
+          .btn-container { text-align: center; margin-top: 30px; }
+          .btn { background-color: #64748b; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 15px; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #edeeef; }
+          .footer p { font-size: 12px; color: #c8c6c5; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Application Update</h1>
+          </div>
+          <div class="content">
+            <h2>Dear ${applicantName},</h2>
+            <p>Thank you for your interest in listing <strong>${turfName}</strong> on the TurfBook platform. Our onboarding team has carefully evaluated your submission.</p>
+            <p>Unfortunately, we are unable to approve your listing application at this time due to the following reason(s):</p>
+            
+            <div class="reason-box">
+              <p>${rejectionReason}</p>
+            </div>
+
+            <p>If you believe this was in error, or once you have updated the necessary details, you are welcome to submit a new application here:</p>
+            
+            <div class="btn-container">
+              <a href="${reapplyLink}" class="btn">Re-apply Now</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} TurfBook. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+export const applicationMoreInfoEmail = (applicantName, turfName, infoNeeded) => {
+  const statusLink = `${process.env.CLIENT_URL || 'http://localhost:5173'}/become-partner/status`;
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #191c1d; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background-color: #FFD700; padding: 30px; text-align: center; }
+          .header h1 { color: #1A1A1A; margin: 0; font-size: 26px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .content h2 { font-size: 22px; margin-top: 0; font-weight: 700; color: #1A1A1A; }
+          .content p { font-size: 16px; line-height: 24px; color: #5f5e5e; }
+          .info-box { background-color: #fffbeb; border-left: 4px solid #FFD700; padding: 18px; margin: 20px 0; border-radius: 8px; color: #1A1A1A; }
+          .info-box p { margin: 0; font-size: 14px; font-weight: 600; line-height: 22px; }
+          .instructions { margin-top: 25px; }
+          .btn-container { text-align: center; margin-top: 30px; }
+          .btn { background-color: #1A1A1A; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 15px; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #edeeef; }
+          .footer p { font-size: 12px; color: #c8c6c5; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>Action Required</h1>
+          </div>
+          <div class="content">
+            <h2>Dear ${applicantName},</h2>
+            <p>Our verification team has reviewed your onboarding request for <strong>${turfName}</strong>. We need some additional information to complete your approval:</p>
+            
+            <div class="info-box">
+              <p>${infoNeeded}</p>
+            </div>
+
+            <p class="instructions">Please reply directly to this email with the requested information or documents, or update your status by visiting your application tracking dashboard:</p>
+            
+            <div class="btn-container">
+              <a href="${statusLink}" class="btn">View Onboarding Status</a>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} TurfBook. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};

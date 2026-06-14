@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { ownerService, turfService } from '../../services/api';
 import WeeklyScheduleBuilder from '../../components/turf/WeeklyScheduleBuilder';
 import SlotBlocker from '../../components/turf/SlotBlocker';
@@ -545,6 +546,21 @@ export default function OwnerDashboard() {
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-grow p-6 lg:p-10 overflow-y-auto space-y-8">
+
+        {user?.mustChangePassword && (
+          <div className="p-4 bg-[#FFD700] text-[#1A1A1A] font-extrabold rounded-2xl flex items-center justify-between shadow-md">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">🔒</span>
+              <span className="text-xs sm:text-sm">Please change your password for security</span>
+            </div>
+            <Link 
+              to="/change-password" 
+              className="px-4 py-2 bg-[#1A1A1A] text-white hover:bg-[#2A2A2A] text-xs font-bold rounded-xl transition-all"
+            >
+              Change Now
+            </Link>
+          </div>
+        )}
         
         {/* Top welcome row */}
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">

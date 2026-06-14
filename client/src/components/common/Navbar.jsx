@@ -16,7 +16,200 @@ const getInitials = (name) => {
   return parts[0][0].toUpperCase();
 };
 
-export default function Navbar() {
+const PartnerNavbar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('');
+
+  // Scroll spy to highlight active section on scroll
+  useEffect(() => {
+    if (location.pathname !== '/become-partner') {
+      setActiveSection('');
+      return;
+    }
+    
+    const handleScrollSpy = () => {
+      const sections = ['benefits', 'requirements', 'support'];
+      const scrollPosition = window.scrollY + 200;
+
+      for (const section of sections) {
+        const el = document.getElementById(section);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollPosition >= top && scrollPosition < top + height) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollSpy);
+    handleScrollSpy();
+    return () => window.removeEventListener('scroll', handleScrollSpy);
+  }, [location.pathname]);
+
+  const handleNavClick = (sectionId) => {
+    setActiveSection(sectionId);
+    setMobileMenuOpen(false);
+    if (location.pathname !== '/become-partner') {
+      navigate('/become-partner');
+      // Timeout is needed to ensure page is loaded before checking DOM elements
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+    } else {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 bg-[#1A1A1A] py-4 border-b border-neutral-800 text-white font-inter">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between">
+          
+          {/* LEFT: Logo */}
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 rounded-xl bg-[#AAEE00] flex items-center justify-center shadow-[0_4px_15px_rgba(170,238,0,0.2)] group-hover:scale-105 transition-transform">
+              <svg className="w-6 h-6 text-black" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+              </svg>
+            </div>
+            <span className="text-xl font-extrabold tracking-tight text-white transition-colors">
+              Turf<span className="text-white">Book</span>
+            </span>
+          </Link>
+
+          {/* MIDDLE: Nav links */}
+          <div className="hidden md:flex items-center space-x-8">
+            <button
+              onClick={() => handleNavClick('benefits')}
+              className={`text-sm font-semibold transition-all hover:text-[#AAEE00] bg-transparent border-0 cursor-pointer ${
+                activeSection === 'benefits' ? 'text-[#AAEE00] underline decoration-2 underline-offset-4 font-bold' : 'text-white'
+              }`}
+            >
+              Benefits
+            </button>
+            <button
+              onClick={() => handleNavClick('requirements')}
+              className={`text-sm font-semibold transition-all hover:text-[#AAEE00] bg-transparent border-0 cursor-pointer ${
+                activeSection === 'requirements' ? 'text-[#AAEE00] underline decoration-2 underline-offset-4 font-bold' : 'text-white'
+              }`}
+            >
+              Requirements
+            </button>
+            <button
+              onClick={() => handleNavClick('support')}
+              className={`text-sm font-semibold transition-all hover:text-[#AAEE00] bg-transparent border-0 cursor-pointer ${
+                activeSection === 'support' ? 'text-[#AAEE00] underline decoration-2 underline-offset-4 font-bold' : 'text-white'
+              }`}
+            >
+              Support
+            </button>
+          </div>
+
+          {/* RIGHT: Buttons */}
+          <div className="hidden md:flex items-center space-x-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="text-sm font-semibold text-white bg-transparent border-[1.5px] border-white rounded-lg px-4 py-2 hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer"
+            >
+              Login as Owner
+            </button>
+            <button
+              onClick={() => navigate('/become-partner/apply')}
+              className="text-sm font-bold text-[#1A1A1A] bg-[#AAEE00] border-0 rounded-lg px-5 py-2 hover:opacity-90 transition-all cursor-pointer"
+            >
+              Apply Now
+            </button>
+          </div>
+
+          {/* Mobile menu toggle */}
+          <div className="md:hidden">
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-white hover:bg-white/10 focus:outline-none bg-transparent border-0 cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-neutral-800 bg-[#1A1A1A] overflow-hidden shadow-lg mt-4"
+          >
+            <div className="px-4 py-4 space-y-4">
+              <button 
+                onClick={() => handleNavClick('benefits')}
+                className={`block w-full text-left py-2 text-base font-semibold bg-transparent border-0 cursor-pointer ${
+                  activeSection === 'benefits' ? 'text-[#AAEE00] underline' : 'text-white'
+                }`}
+              >
+                Benefits
+              </button>
+              <button 
+                onClick={() => handleNavClick('requirements')}
+                className={`block w-full text-left py-2 text-base font-semibold bg-transparent border-0 cursor-pointer ${
+                  activeSection === 'requirements' ? 'text-[#AAEE00] underline' : 'text-white'
+                }`}
+              >
+                Requirements
+              </button>
+              <button 
+                onClick={() => handleNavClick('support')}
+                className={`block w-full text-left py-2 text-base font-semibold bg-transparent border-0 cursor-pointer ${
+                  activeSection === 'support' ? 'text-[#AAEE00] underline' : 'text-white'
+                }`}
+              >
+                Support
+              </button>
+              
+              <hr className="border-neutral-800" />
+              
+              <div className="flex flex-col space-y-2 pt-2">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate('/login');
+                  }}
+                  className="w-full py-2.5 border border-white text-white rounded-xl text-sm font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all text-center bg-transparent cursor-pointer"
+                >
+                  Login as Owner
+                </button>
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate('/become-partner/apply');
+                  }}
+                  className="w-full py-2.5 bg-[#AAEE00] text-black border-0 rounded-xl text-sm font-extrabold hover:opacity-90 transition-all text-center cursor-pointer"
+                >
+                  Apply Now
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
+  );
+};
+
+const MainNavbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -69,10 +262,10 @@ export default function Navbar() {
 
           {/* Center: Nav links */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className={`text-sm font-semibold transition-colors ${location.pathname === '/' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
+            <Link to="/" className={`text-sm font-semibold transition-colors ${location.pathname === '/' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1 font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
               Home
             </Link>
-            <Link to="/search" className={`text-sm font-semibold transition-colors ${location.pathname === '/search' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
+            <Link to="/search" className={`text-sm font-semibold transition-colors ${location.pathname === '/search' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1 font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
               Fields
             </Link>
             {(user?.role !== 'owner') && (
@@ -80,18 +273,18 @@ export default function Navbar() {
                 <a href="/#programs" className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">
                   Programs
                 </a>
-                <Link to="/contact-support" className={`text-sm font-semibold transition-colors ${location.pathname === '/contact-support' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
+                <Link to="/contact-support" className={`text-sm font-semibold transition-colors ${location.pathname === '/contact-support' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1 font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
                   Contact
                 </Link>
               </>
             )}
             {user?.role === 'owner' && (
-              <Link to="/owner/dashboard" className={`text-sm font-semibold transition-colors ${location.pathname === '/owner/dashboard' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
+              <Link to="/owner/dashboard" className={`text-sm font-semibold transition-colors ${location.pathname === '/owner/dashboard' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1 font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
                 My Dashboard
               </Link>
             )}
             {user?.role === 'admin' && (
-              <Link to="/admin/dashboard" className={`text-sm font-semibold transition-colors ${location.pathname === '/admin/dashboard' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1' : 'text-slate-600 hover:text-slate-900'}`}>
+              <Link to="/admin/dashboard" className={`text-sm font-semibold transition-colors ${location.pathname === '/admin/dashboard' ? 'text-[#5D7A00] border-b-2 border-[#5D7A00] pb-1 font-bold' : 'text-slate-600 hover:text-slate-900'}`}>
                 Admin Panel
               </Link>
             )}
@@ -99,9 +292,17 @@ export default function Navbar() {
 
           {/* Right: CTA / Profile */}
           <div className="hidden md:flex items-center space-x-6">
+            {!isAuthenticated && location.pathname.includes('partner') && (
+              <Link 
+                to="/login"
+                className="text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors"
+              >
+                Login as Owner
+              </Link>
+            )}
             {(!isAuthenticated || user?.role === 'owner') && (
               <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_register', role: 'owner' } }))}
+                onClick={() => navigate('/become-partner')}
                 className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-transparent border-0 cursor-pointer"
               >
                 List Your Turf
@@ -112,7 +313,7 @@ export default function Navbar() {
               <div className="relative">
                 <button 
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center space-x-2 bg-slate-50 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-full transition-all focus:outline-none"
+                  className="flex items-center space-x-2 bg-slate-50 border border-slate-200 hover:border-slate-300 px-3 py-1.5 rounded-full transition-all focus:outline-none cursor-pointer"
                 >
                   {user?.avatar?.url || user?.avatar ? (
                     <img 
@@ -202,7 +403,7 @@ export default function Navbar() {
 
                       <button 
                         onClick={handleLogout}
-                        className="flex items-center space-x-2.5 w-full px-3.5 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors text-left font-medium"
+                        className="flex items-center space-x-2.5 w-full px-3.5 py-2 rounded-xl text-sm text-red-500 hover:bg-red-50 transition-colors text-left font-medium bg-transparent border-0 cursor-pointer"
                       >
                         <LogOut className="w-4 h-4" />
                         <span>Logout</span>
@@ -221,7 +422,7 @@ export default function Navbar() {
                 </button>
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_register' } }))}
-                  className="px-5 py-2.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-sm transition-all shadow-sm cursor-pointer"
+                  className="px-5 py-2.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-sm transition-all shadow-sm cursor-pointer border-0"
                 >
                   Register
                 </button>
@@ -233,7 +434,7 @@ export default function Navbar() {
           <div className="md:hidden">
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-xl text-slate-600 hover:text-black hover:bg-slate-50 focus:outline-none"
+              className="p-2 rounded-xl text-slate-600 hover:text-black hover:bg-slate-50 focus:outline-none bg-transparent border-0 cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -270,13 +471,22 @@ export default function Navbar() {
 
               <hr className="border-slate-100" />
 
+              {!isAuthenticated && location.pathname.includes('partner') && (
+                <Link 
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center w-full py-2.5 mb-2 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold hover:border-slate-400 bg-transparent cursor-pointer text-center"
+                >
+                  Login as Owner
+                </Link>
+              )}
               {(!isAuthenticated || user?.role === 'owner') && (
                 <button 
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_register', role: 'owner' } }));
+                    navigate('/become-partner');
                   }}
-                  className="flex items-center justify-center w-full py-2.5 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold hover:border-slate-400 bg-transparent cursor-pointer"
+                  className="flex items-center justify-center w-full py-2.5 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold hover:border-slate-450 bg-transparent cursor-pointer text-center"
                 >
                   List Your Turf
                 </button>
@@ -319,7 +529,7 @@ export default function Navbar() {
 
                   <button 
                     onClick={handleLogout}
-                    className="flex items-center space-x-2.5 w-full py-2 text-sm font-semibold text-red-500"
+                    className="flex items-center space-x-2.5 w-full py-2 text-sm font-semibold text-red-500 bg-transparent border-0 cursor-pointer text-left"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
@@ -331,7 +541,7 @@ export default function Navbar() {
                     setMobileMenuOpen(false);
                     window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_login' } }));
                   }}
-                  className="w-full py-3 bg-primary text-black font-bold rounded-xl text-sm hover:bg-[#BBEF11] block text-center cursor-pointer"
+                  className="w-full py-3 bg-primary text-black border-0 font-bold rounded-xl text-sm hover:bg-[#BBEF11] block text-center cursor-pointer"
                 >
                   Login / Register
                 </button>
@@ -341,5 +551,20 @@ export default function Navbar() {
         )}
       </AnimatePresence>
     </nav>
+  );
+};
+
+export default function Navbar() {
+  const location = useLocation();
+  const isPartnerPage = location.pathname.startsWith('/become-partner');
+
+  return (
+    <>
+      {isPartnerPage ? (
+        <PartnerNavbar />
+      ) : (
+        <MainNavbar />
+      )}
+    </>
   );
 }

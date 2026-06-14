@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { MapPin, Search } from 'lucide-react';
+import { MapPin, Search, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const initialCities = [

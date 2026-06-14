@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 
 import connectDB from './config/db.js';
 import apiRouter from './routes/api.js';
+import applicationRoutes from './routes/application.routes.js';
 import { initSocket } from './utils/socket.js';
 import { initCronJobs } from './utils/cronJobs.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
@@ -75,6 +76,7 @@ app.use((req, res, next) => {
 
 // API Routes Mount
 app.use('/api', apiRouter);
+app.use('/api/applications', applicationRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

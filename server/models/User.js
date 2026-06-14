@@ -45,6 +45,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  isApproved: {
+    type: Boolean,
+    default: true,
+  },
+  mustChangePassword: {
+    type: Boolean,
+    default: false,
+  },
 }, { timestamps: true });
 
 // Pre-save password hashing

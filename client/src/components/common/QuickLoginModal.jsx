@@ -98,6 +98,11 @@ export default function QuickLoginModal() {
         const response = await authService.login({ email, password });
         if (response.success) {
           dispatch(authSuccess({ user: response.data, token: localStorage.getItem('tb_token') }));
+          if (response.mustChangePassword) {
+            handleClose();
+            navigate('/change-password');
+            return;
+          }
         } else {
           dispatch(authFailure(response.message || 'Login failed.'));
           return;

@@ -33,6 +33,11 @@ export default function Login() {
       if (response.success) {
         dispatch(authSuccess({ user: response.data, token: localStorage.getItem('tb_token') }));
         
+        if (response.mustChangePassword) {
+          navigate('/change-password');
+          return;
+        }
+
         // Redirect based on role
         const role = response.data.role;
         if (role === 'admin') {

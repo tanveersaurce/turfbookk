@@ -17,12 +17,20 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import AdminLogin from './pages/auth/AdminLogin';
 import { ResetPassword } from './pages/auth/ResetPassword';
+import ChangePassword from './pages/auth/ChangePassword';
 
 // Dashboards
 import UserDashboard from './pages/user/UserDashboard';
 import OwnerDashboard from './pages/owner/OwnerDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ReviewTurf from './pages/admin/ReviewTurf';
+
+// Partner Pages
+import PartnerLanding from './pages/partner/PartnerLanding';
+import ApplicationForm from './pages/partner/ApplicationForm';
+import ApplicationSuccess from './pages/partner/ApplicationSuccess';
+import ApplicationStatus from './pages/partner/ApplicationStatus';
+import PartnerApplications from './pages/admin/PartnerApplications';
 
 // Global Layout
 import Navbar from './components/common/Navbar';
@@ -82,11 +90,26 @@ function App() {
             } 
           />
 
-          {/* General & Turf Owner Auth */}
+          {/* General Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/owner/login" element={<Login />} />
-          <Route path="/owner/register" element={<Register />} />
+
+          {/* Partner Onboarding Public Routes */}
+          <Route path="/become-partner" element={<PartnerLanding />} />
+          <Route path="/become-partner/apply" element={<ApplicationForm />} />
+          <Route path="/become-partner/success" element={<ApplicationSuccess />} />
+          <Route path="/become-partner/status" element={<ApplicationStatus />} />
+          
+          {/* Force Change Password Route (auth required) */}
+          <Route 
+            path="/change-password" 
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
+              </ProtectedRoute>
+            } 
+          />
+
           <Route 
             path="/owner/dashboard" 
             element={
@@ -111,6 +134,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <ReviewTurf />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/applications" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <PartnerApplications />
               </ProtectedRoute>
             } 
           />

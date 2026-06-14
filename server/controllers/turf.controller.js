@@ -20,7 +20,7 @@ export const getTurfs = async (req, res, next) => {
     }
 
     if (sport) {
-      query.sports = sport;
+      query.sports = sport.toLowerCase();
     }
 
     if (price) {
