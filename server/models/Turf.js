@@ -35,7 +35,7 @@ const turfSchema = new mongoose.Schema({
   },
   sports: [{
     type: String,
-    enum: ['football', 'cricket', 'basketball', 'badminton', 'tennis'],
+    enum: ['football', 'cricket', 'basketball', 'badminton', 'tennis', 'kabaddi'],
     required: true,
   }],
   pricePerHour: {

@@ -76,7 +76,7 @@ export default function Footer() {
                     List Your Turf
                   </button>
                 </li>
-                <li><Link to="/owner/login" className="text-muted hover:text-primary transition-colors">Partner Dashboard</Link></li>
+                <li><Link to="/login" className="text-muted hover:text-primary transition-colors">Partner Dashboard</Link></li>
                 <li><Link to="/admin/login" className="text-muted hover:text-primary transition-colors">Admin Portal</Link></li>
               </ul>
             </div>

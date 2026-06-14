@@ -180,3 +180,6 @@ export const getAllBookings = async (req, res, next) => {
     next(error);
   }
 };
+
+
+

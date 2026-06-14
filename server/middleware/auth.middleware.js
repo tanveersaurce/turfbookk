@@ -31,6 +31,10 @@ export const protect = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'This account has been deactivated.' });
     }
 
+    if (req.user.role === 'owner' && req.user.isApproved === false) {
+      return res.status(403).json({ success: false, message: 'Your account is pending Admin approval. Please wait.' });
+    }
+
     next();
   } catch (error) {
     console.error('JWT Verification Error:', error.message);

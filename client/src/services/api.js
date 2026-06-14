@@ -278,17 +278,19 @@ export const adminService = {
     ];
   },
   getDashboard: async () => {
-    const [analyticsRes, usersRes, turfsRes, bookingsRes] = await Promise.all([
+    const [analyticsRes, usersRes, turfsRes, bookingsRes, applicationsRes] = await Promise.all([
       api.get('/admin/analytics'),
       api.get('/admin/users'),
       api.get('/admin/turfs'),
-      api.get('/admin/bookings')
+      api.get('/admin/bookings'),
+      api.get('/applications')
     ]);
 
     const statsData = analyticsRes.data.data?.stats || {};
     const users = usersRes.data.data || [];
     const turfs = turfsRes.data.data || [];
     const bookings = bookingsRes.data.data || [];
+    const applications = applicationsRes.data.data || [];
 
     return {
       stats: {
@@ -324,17 +326,15 @@ export const adminService = {
         remainingAmount: b.totalAmount - Math.round(b.totalAmount * 0.20),
         status: b.status
       })),
-      applications: [
-        {
-          _id: 'app-1',
-          name: 'Rajesh Kumar',
-          email: 'rajesh@owner.com',
-          phone: '9876543210',
-          businessName: 'Bernabeu Box Sports',
-          turfAddress: '12, MP Nagar Zone 2, Bhopal',
-          status: 'pending'
-        }
-      ],
+      applications: applications.map(app => ({
+        _id: app._id,
+        name: app.name || app.applicantName,
+        email: app.email,
+        phone: app.phone,
+        businessName: app.businessName,
+        turfAddress: app.turfAddress,
+        status: app.status
+      })),
       ads: [
         {
           _id: 'ad-1',
@@ -351,10 +351,12 @@ export const adminService = {
     };
   },
   approveOwner: async (appId) => {
-    return { success: true };
+    const res = await api.put(`/applications/${appId}/approve`);
+    return res.data;
   },
   rejectOwner: async (appId, reason) => {
-    return { success: true };
+    const res = await api.put(`/applications/${appId}/reject`, { rejectionReason: reason });
+    return res.data;
   },
   toggleUser: async (userId) => {
     const res = await api.put(`/admin/users/${userId}/status`);
@@ -382,15 +384,7 @@ export const adminService = {
 // -------------------------------------------------------------
 export const ownerService = {
   apply: async (data) => {
-    // Register owner user
-    const res = await api.post('/auth/register', {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      phone: data.phone,
-      role: 'owner',
-      city: 'Delhi',
-    });
+    const res = await api.post('/auth/owner-apply', data);
     return res.data;
   },
   getDashboard: async (email) => {

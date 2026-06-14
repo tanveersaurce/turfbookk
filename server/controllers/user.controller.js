@@ -82,10 +82,18 @@ export const updateUserAvatar = async (req, res, next) => {
 // @access  Private
 export const changePassword = async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = req.body;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Please provide current and new password.' });
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide current password, new password, and confirm password.' });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'New password and confirm password do not match.' });
+    }
+
+    if (newPassword === currentPassword) {
+      return res.status(400).json({ success: false, message: 'New password must be different from current password.' });
     }
 
     const user = await User.findById(req.user.id);
@@ -99,11 +107,13 @@ export const changePassword = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'Incorrect current password.' });
     }
 
-    // Set new password (will be hashed automatically by pre-save hook)
-    user.passwordHash = newPassword;
+    // Hash new password with bcrypt
+    const salt = await bcrypt.genSalt(12);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    user.mustChangePassword = false;
     await user.save();
 
-    res.status(200).json({ success: true, message: 'Password updated successfully.' });
+    res.status(200).json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     next(error);
   }

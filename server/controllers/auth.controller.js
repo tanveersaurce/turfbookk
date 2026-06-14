@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import PartnerApplication from '../models/PartnerApplication.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
 import { welcomeEmail, resetPasswordEmail } from '../utils/emailTemplates.js';
@@ -12,6 +13,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_tb_123';
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, phone, city, role } = req.body;
+
+    if (role && role !== 'user') {
+      return res.status(400).json({ success: false, message: 'Direct registration of roles other than user is restricted. Owners must submit partner applications.' });
+    }
 
     // Check if user already exists
     const userExists = await User.findOne({ email: email.toLowerCase() });
@@ -75,6 +80,15 @@ export const login = async (req, res, next) => {
     // Check for user
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
+      // Check if there is a PartnerApplication pending, under review, or rejected with this email
+      const pendingApp = await PartnerApplication.findOne({ email: email.toLowerCase() });
+      if (pendingApp) {
+        if (pendingApp.status === 'pending' || pendingApp.status === 'under_review' || pendingApp.status === 'more_info_needed') {
+          return res.status(403).json({ success: false, message: 'Your account is pending Admin approval. Please wait.' });
+        } else if (pendingApp.status === 'rejected') {
+          return res.status(403).json({ success: false, message: `Your partner application was rejected. Reason: ${pendingApp.rejectionReason || 'Not specified'}` });
+        }
+      }
       return res.status(401).json({ success: false, message: 'Invalid credentials.' });
     }
 
@@ -88,10 +102,14 @@ export const login = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'This account has been deactivated.' });
     }
 
+    if (user.role === 'owner' && user.isApproved === false) {
+      return res.status(403).json({ success: false, message: 'Your account is pending Admin approval. Please wait.' });
+    }
+
     // Generate token and set in cookie
     const token = generateToken(res, user._id, user.role);
 
-    res.status(200).json({
+    const responseData = {
       success: true,
       token,
       data: {
@@ -103,7 +121,14 @@ export const login = async (req, res, next) => {
         role: user.role,
         isVerified: user.isVerified,
       },
-    });
+    };
+
+    if (user.mustChangePassword === true) {
+      responseData.mustChangePassword = true;
+      responseData.redirectTo = '/change-password';
+    }
+
+    res.status(200).json(responseData);
   } catch (error) {
     next(error);
   }
@@ -211,3 +236,53 @@ export const resetPassword = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Submit a partner/owner application
+// @route   POST /api/auth/owner-apply
+// @access  Public
+export const ownerApply = async (req, res, next) => {
+  try {
+    const { name, email, phone, businessName, turfAddress, password } = req.body;
+
+    if (!name || !email || !phone || !businessName || !turfAddress || !password) {
+      return res.status(400).json({ success: false, message: 'Please fill in all details.' });
+    }
+
+    // Check if user already exists
+    const userExists = await User.findOne({ email: email.toLowerCase() });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'Account already exists with this email.' });
+    }
+
+    // Check if pending application exists
+    const pendingApp = await OwnerApplication.findOne({ email: email.toLowerCase(), status: 'pending' });
+    if (pendingApp) {
+      return res.status(400).json({ success: false, message: 'An application is already pending for this email.' });
+    }
+
+    // Create owner application
+    const application = await OwnerApplication.create({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      businessName,
+      turfAddress,
+      passwordHash: password // Hashes automatically via schema pre-save hook
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully. It is under review.',
+      data: {
+        _id: application._id,
+        name: application.name,
+        email: application.email,
+        businessName: application.businessName,
+        status: application.status
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
