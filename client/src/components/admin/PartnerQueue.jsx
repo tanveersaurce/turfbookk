@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { Check, X, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function PartnerQueue({ applications, turfs, handleApproveOwner, handleRejectOwner, handleApproveTurf }) {
+export default function PartnerQueue({ applications, handleApproveOwner, handleRejectOwner }) {
   // Local modal state
   const [rejectingAppId, setRejectingAppId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
   const pendingApps = applications.filter(a => a.status === 'pending');
-  const pendingTurfs = turfs.filter(t => !t.isApproved);
 
   const onSubmitReject = (e) => {
     e.preventDefault();
@@ -65,54 +64,13 @@ export default function PartnerQueue({ applications, turfs, handleApproveOwner, 
                   </button>
                   <button 
                     onClick={() => setRejectingAppId(app._id || app.id)}
-                    className="px-4 py-2 border border-red-100 hover:bg-red-50 text-red-500 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1 transition-all"
+                    className="px-4 py-2 border border-red-100 hover:bg-red-50 text-red-550 text-xs font-semibold rounded-xl flex items-center justify-center space-x-1 transition-all"
                   >
                     <X className="w-3.5 h-3.5" />
                     <span>Reject</span>
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Section 2: Turf Listing Approvals Queue */}
-      <div className="space-y-4 pt-6 border-t border-slate-200">
-        <div>
-          <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">Turf Listing Approvals</h2>
-          <p className="text-xs text-slate-500 font-medium">Review and approve new turf listings submitted by venue owners.</p>
-        </div>
-
-        {pendingTurfs.length === 0 ? (
-          <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
-            <AlertCircle className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-            <h3 className="text-sm font-bold text-slate-800">Queue is Clear</h3>
-            <p className="text-xs text-slate-400 mt-1">No pending turf listings found.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {pendingTurfs.map((t) => (
-              <Link 
-                key={t._id || t.id}
-                to={`/admin/review-turf/${t._id || t.id}`}
-                className="p-5 bg-white border border-slate-200 hover:border-amber-400 rounded-2xl shadow-sm hover:shadow transition-all flex flex-row items-center space-x-4 block group text-left"
-              >
-                <img 
-                  src={t.images?.[0] || 'https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=300&q=80'} 
-                  className="w-16 h-16 rounded-2xl object-cover border border-slate-100 shrink-0" 
-                />
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-xs font-black text-slate-800 group-hover:text-[#5D7A00] transition-colors truncate">{t.name}</h4>
-                  <p className="text-[10px] text-slate-500 font-bold truncate">Location: <span className="text-slate-850 font-extrabold">{t.area}, {t.city}</span></p>
-                  <p className="text-[10px] text-slate-500 font-bold">Owner: <span className="text-slate-850 font-extrabold">{t.owner?.name || 'Unknown'}</span></p>
-                  
-                  <div className="flex items-center justify-between pt-1 text-[10px] font-bold text-[#5D7A00] group-hover:underline">
-                    <span>Review Request &rarr;</span>
-                    <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-black uppercase text-[8px] tracking-wider">Pending</span>
-                  </div>
-                </div>
-              </Link>
             ))}
           </div>
         )}

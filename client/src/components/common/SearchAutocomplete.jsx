@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setSelectedCity } from '../../store/turfSlice';
 import { useTurf } from '../../hooks/useTurf';
 
 export const SearchAutocomplete = ({ placeholder = "Search turfs by city, area or name...", initialValue = "" }) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { getSearchSuggestions } = useTurf();
   
   const [query, setQuery] = useState(initialValue);
@@ -76,7 +79,7 @@ export const SearchAutocomplete = ({ placeholder = "Search turfs by city, area o
         handleSelect(flattenedList[activeIndex]);
       } else {
         // Search current query text directly
-        navigate(`/turfs?search=${query}`);
+        navigate(`/search?search=${query}`);
         setIsOpen(false);
       }
     } else if (e.key === 'Escape') {
@@ -88,20 +91,21 @@ export const SearchAutocomplete = ({ placeholder = "Search turfs by city, area o
     setIsOpen(false);
     if (item.type === 'city') {
       setQuery(item.value);
-      navigate(`/turfs?city=${item.value}`);
+      dispatch(setSelectedCity(item.value));
+      navigate(`/search?city=${item.value}`);
     } else if (item.type === 'area') {
       setQuery(item.value);
-      navigate(`/turfs?search=${item.value}`);
+      navigate(`/search?search=${item.value}`);
     } else if (item.type === 'turf') {
       setQuery(item.value);
-      navigate(`/turfs?search=${item.value}`);
+      navigate(`/search?search=${item.value}`);
     }
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
     if (query.trim()) {
-      navigate(`/turfs?search=${query.trim()}`);
+      navigate(`/search?search=${query.trim()}`);
       setIsOpen(false);
     }
   };

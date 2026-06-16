@@ -332,12 +332,17 @@ export const approveApplication = async (req, res, next) => {
     return { newUser, newTurf, application };
   };
 
-  const session = await mongoose.startSession();
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
   try {
-    session.startTransaction();
+    if (useTransaction && session) {
+      session.startTransaction();
+    }
     const result = await executeApproval(session);
-    await session.commitTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     return res.status(200).json({
       success: true,

@@ -37,6 +37,7 @@ import {
   checkSlotsAvailability,
   uploadTurfImages,
   blockSlot,
+  getDistinctCities,
 } from '../controllers/turf.controller.js';
 
 import {
@@ -102,6 +103,7 @@ router.delete('/users/favorites/:turfId', protect, removeFromFavorites);
 // ==========================================
 router.get('/turfs', getTurfs);
 router.get('/turfs/search/suggestions', searchSuggestions);
+router.get('/turfs/cities/list', getDistinctCities);
 router.get('/turfs/:id', getTurfById);
 router.get('/turfs/:id/slots/:date', checkSlotsAvailability);
 

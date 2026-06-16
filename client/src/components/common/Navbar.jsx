@@ -119,7 +119,7 @@ const PartnerNavbar = () => {
           {/* RIGHT: Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_login' } }))}
               className="text-sm font-semibold text-white bg-transparent border-[1.5px] border-white rounded-lg px-4 py-2 hover:bg-white hover:text-[#1A1A1A] transition-all cursor-pointer"
             >
               Login as Owner
@@ -185,7 +185,7 @@ const PartnerNavbar = () => {
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    navigate('/login');
+                    window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_login' } }));
                   }}
                   className="w-full py-2.5 border border-white text-white rounded-xl text-sm font-semibold hover:bg-white hover:text-[#1A1A1A] transition-all text-center bg-transparent cursor-pointer"
                 >
@@ -293,14 +293,14 @@ const MainNavbar = () => {
           {/* Right: CTA / Profile */}
           <div className="hidden md:flex items-center space-x-6">
             {!isAuthenticated && location.pathname.includes('partner') && (
-              <Link 
-                to="/login"
-                className="text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors"
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_login' } }))}
+                className="text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors bg-transparent border-0 cursor-pointer"
               >
                 Login as Owner
-              </Link>
+              </button>
             )}
-            {(!isAuthenticated || user?.role === 'owner') && (
+            {!user && (
               <button 
                 onClick={() => navigate('/become-partner')}
                 className="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors bg-transparent border-0 cursor-pointer"
@@ -472,15 +472,17 @@ const MainNavbar = () => {
               <hr className="border-slate-100" />
 
               {!isAuthenticated && location.pathname.includes('partner') && (
-                <Link 
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
+                <button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_login' } }));
+                  }}
                   className="flex items-center justify-center w-full py-2.5 mb-2 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold hover:border-slate-400 bg-transparent cursor-pointer text-center"
                 >
                   Login as Owner
-                </Link>
+                </button>
               )}
-              {(!isAuthenticated || user?.role === 'owner') && (
+              {!user && (
                 <button 
                   onClick={() => {
                     setMobileMenuOpen(false);

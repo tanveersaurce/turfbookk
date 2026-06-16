@@ -1,3 +1,4 @@
+import './config/env.js';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -5,7 +6,6 @@ import mongoSanitize from 'express-mongo-sanitize';
 import cookieParser from 'cookie-parser';
 import hpp from 'hpp';
 import http from 'http';
-import dotenv from 'dotenv';
 
 import connectDB from './config/db.js';
 import apiRouter from './routes/api.js';
@@ -15,8 +15,6 @@ import { initCronJobs } from './utils/cronJobs.js';
 import { generalLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

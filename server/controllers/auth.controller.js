@@ -255,19 +255,27 @@ export const ownerApply = async (req, res, next) => {
     }
 
     // Check if pending application exists
-    const pendingApp = await OwnerApplication.findOne({ email: email.toLowerCase(), status: 'pending' });
+    const pendingApp = await PartnerApplication.findOne({ email: email.toLowerCase(), status: 'pending' });
     if (pendingApp) {
       return res.status(400).json({ success: false, message: 'An application is already pending for this email.' });
     }
 
-    // Create owner application
-    const application = await OwnerApplication.create({
-      name,
+    // Create partner application
+    const application = await PartnerApplication.create({
+      applicantName: name,
       email: email.toLowerCase(),
       phone,
       businessName,
+      businessAddress: turfAddress,
+      experience: '1 Year',
+      turfName: businessName,
       turfAddress,
-      passwordHash: password // Hashes automatically via schema pre-save hook
+      area: 'Bhopal',
+      city: 'Bhopal',
+      pricePerHour: 1000,
+      agreedToTerms: true,
+      operatingHours: { open: '06:00', close: '22:00' },
+      cancellationPolicy: 'full-refund'
     });
 
     res.status(201).json({
@@ -275,7 +283,7 @@ export const ownerApply = async (req, res, next) => {
       message: 'Application submitted successfully. It is under review.',
       data: {
         _id: application._id,
-        name: application.name,
+        name: application.applicantName,
         email: application.email,
         businessName: application.businessName,
         status: application.status

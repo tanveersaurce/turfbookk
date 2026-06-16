@@ -113,6 +113,10 @@ export const turfService = {
     const res = await api.get('/turfs', { params });
     return res.data;
   },
+  getAvailableCities: async () => {
+    const res = await api.get('/turfs/cities/list');
+    return res.data;
+  },
   getSuggestions: async (q) => {
     const res = await api.get('/turfs/search/suggestions', { params: { q } });
     return res.data;

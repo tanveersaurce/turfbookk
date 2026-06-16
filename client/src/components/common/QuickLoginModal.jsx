@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function QuickLoginModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [authMode, setAuthMode] = useState('email_login'); // email_login | email_register
-  const [role, setRole] = useState('user'); // user | owner
+  const role = 'user';
   
   // Form States
   const [email, setEmail] = useState('');
@@ -32,9 +32,7 @@ export default function QuickLoginModal() {
     const handleOpen = (e) => {
       setIsOpen(true);
       const mode = e?.detail?.mode || 'email_login';
-      const initialRole = e?.detail?.role || 'user';
       setAuthMode(mode);
-      setRole(initialRole);
       setEmail('');
       setPassword('');
       setName('');
@@ -97,12 +95,35 @@ export default function QuickLoginModal() {
       if (authMode === 'email_login') {
         const response = await authService.login({ email, password });
         if (response.success) {
-          dispatch(authSuccess({ user: response.data, token: localStorage.getItem('tb_token') }));
+          const loggedInUser = response.data;
+          
+          if (loggedInUser.role === 'owner' && loggedInUser.isApproved === false) {
+            dispatch(authFailure("Your account is pending Admin approval."));
+            return;
+          }
+
+          dispatch(authSuccess({ user: loggedInUser, token: localStorage.getItem('tb_token') }));
+          
           if (response.mustChangePassword) {
             handleClose();
             navigate('/change-password');
             return;
           }
+
+          handleClose();
+          
+          if (loggedInUser.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else if (loggedInUser.role === 'owner') {
+            navigate('/owner/dashboard');
+          } else {
+            if (currentBooking?.turfId) {
+              navigate('/checkout');
+            } else {
+              navigate('/');
+            }
+          }
+          return;
         } else {
           dispatch(authFailure(response.message || 'Login failed.'));
           return;
@@ -118,14 +139,17 @@ export default function QuickLoginModal() {
         });
         if (response.success) {
           dispatch(authSuccess({ user: response.data, token: localStorage.getItem('tb_token') }));
+          handleClose();
+          if (currentBooking?.turfId) {
+            navigate('/checkout');
+          } else {
+            navigate('/');
+          }
+          return;
         } else {
           dispatch(authFailure(response.message || 'Registration failed.'));
           return;
         }
-      }
-      handleClose();
-      if (currentBooking.turfId) {
-        navigate('/checkout');
       }
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Authentication Failed';
@@ -408,37 +432,7 @@ export default function QuickLoginModal() {
                     <p className="text-sm text-slate-500 font-medium">Start your journey with TurfBook</p>
                   </div>
 
-                  {/* Role selector capsule tabs */}
-                  <div className="p-1 bg-[#F1F5F9] rounded-2xl flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => setRole('user')}
-                      className={`flex-1 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center space-x-2 focus:outline-none ${
-                        role === 'user'
-                          ? 'bg-[#1E293B] text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                      </svg>
-                      <span>Player</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRole('owner')}
-                      className={`flex-1 py-3 rounded-xl text-xs font-black tracking-wider uppercase transition-all flex items-center justify-center space-x-2 focus:outline-none ${
-                        role === 'owner'
-                          ? 'bg-[#1E293B] text-white shadow-sm'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 19.5h16.5M5.625 19.5V8.25m12.75 11.25V9.75M8.25 19.5V14.562m8.25.498a8.224 8.224 0 0 1-8.25-8.25v-.343m0 0a4.5 4.5 0 0 1-4.5-4.5V3h15.75v.25a4.5 4.5 0 0 1-4.5 4.5v.343M6.75 21h10.5" />
-                      </svg>
-                      <span>Turf Owner</span>
-                    </button>
-                  </div>
+
 
                   {/* Form Error Banner */}
                   {(error || validationError) && (
