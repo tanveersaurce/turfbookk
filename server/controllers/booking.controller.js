@@ -7,22 +7,32 @@ import mongoose from 'mongoose';
 // @route   POST /api/bookings
 // @access  Private
 export const createBooking = async (req, res, next) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
+  if (useTransaction && session) {
+    session.startTransaction();
+  }
 
   try {
     const { turfId, date, startTime, endTime, sport } = req.body;
 
     if (!turfId || !date || !startTime || !endTime || !sport) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Please provide all booking fields.' });
     }
 
-    const turf = await Turf.findById(turfId).session(session);
+    const turf = useTransaction
+      ? await Turf.findById(turfId).session(session)
+      : await Turf.findById(turfId);
+      
     if (!turf) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(404).json({ success: false, message: 'Turf not found.' });
     }
 
@@ -32,8 +42,10 @@ export const createBooking = async (req, res, next) => {
     const duration = (endH * 60 + endM - (startH * 60 + startM)) / 60; // Duration in hours
 
     if (duration <= 0) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Invalid start and end times.' });
     }
 
@@ -48,15 +60,19 @@ export const createBooking = async (req, res, next) => {
     );
 
     if (turfSlots.length === 0) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Selected slots are not open or not generated yet.' });
     }
 
     const isAnyBooked = turfSlots.some(slot => slot.isBooked);
     if (isAnyBooked) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'One or more of the selected slots are already booked.' });
     }
 
@@ -73,10 +89,12 @@ export const createBooking = async (req, res, next) => {
       totalAmount,
       status: 'pending',
       paymentStatus: 'pending',
-    }], { session });
+    }], useTransaction ? { session } : {});
 
-    await session.commitTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     res.status(201).json({
       success: true,
@@ -84,8 +102,10 @@ export const createBooking = async (req, res, next) => {
       data: booking[0],
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     next(error);
   }
 };
@@ -140,29 +160,41 @@ export const getBookingById = async (req, res, next) => {
 // @route   PUT /api/bookings/:id/cancel
 // @access  Private
 export const cancelBooking = async (req, res, next) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
+  if (useTransaction && session) {
+    session.startTransaction();
+  }
 
   try {
     const { id } = req.params;
 
-    const booking = await Booking.findById(id).session(session);
+    const booking = useTransaction
+      ? await Booking.findById(id).session(session)
+      : await Booking.findById(id);
+      
     if (!booking) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(404).json({ success: false, message: 'Booking not found.' });
     }
 
     // Authorization check
     if (booking.user.toString() !== req.user.id && req.user.role !== 'admin' && booking.owner.toString() !== req.user.id) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(403).json({ success: false, message: 'Not authorized to cancel this booking.' });
     }
 
     if (booking.status === 'cancelled') {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Booking is already cancelled.' });
     }
 
@@ -171,10 +203,13 @@ export const cancelBooking = async (req, res, next) => {
     if (booking.paymentStatus === 'paid') {
       booking.paymentStatus = 'refunded'; // Mock refund tag
     }
-    await booking.save({ session });
+    await booking.save(useTransaction ? { session } : {});
 
     // Release Turf Slots
-    const turf = await Turf.findById(booking.turf).session(session);
+    const turf = useTransaction
+      ? await Turf.findById(booking.turf).session(session)
+      : await Turf.findById(booking.turf);
+      
     if (turf) {
       for (const slot of turf.slots) {
         if (
@@ -186,7 +221,7 @@ export const cancelBooking = async (req, res, next) => {
           slot.bookedBy = null;
         }
       }
-      await turf.save({ session });
+      await turf.save(useTransaction ? { session } : {});
     }
 
     // Send notifications
@@ -196,7 +231,7 @@ export const cancelBooking = async (req, res, next) => {
       title: 'Booking Cancelled',
       message: `Your booking at ${turf.name} for ${booking.date} is cancelled.`,
       link: '/bookings',
-    }], { session });
+    }], useTransaction ? { session } : {});
 
     await Notification.create([{
       user: booking.owner,
@@ -204,10 +239,12 @@ export const cancelBooking = async (req, res, next) => {
       title: 'Booking Cancelled',
       message: `Booking ${booking.bookingId} at ${turf.name} was cancelled by the client.`,
       link: '/owner/bookings',
-    }], { session });
+    }], useTransaction ? { session } : {});
 
-    await session.commitTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     // Emit live slot updates if Socket.io is running
     if (global.io) {
@@ -221,8 +258,10 @@ export const cancelBooking = async (req, res, next) => {
 
     res.status(200).json({ success: true, message: 'Booking cancelled successfully.', data: booking });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     next(error);
   }
 };

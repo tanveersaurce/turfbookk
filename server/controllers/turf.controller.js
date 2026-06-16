@@ -1,8 +1,12 @@
+import mongoose from 'mongoose';
 import Turf from '../models/Turf.js';
 import User from '../models/User.js';
 import { generateWeekSlots } from '../utils/slotGenerator.js';
 import { uploadToCloudinary } from '../utils/cloudinary.js';
 import NodeCache from 'node-cache';
+
+// Escapes special characters for use in regular expressions
+const escapeRegExp = (string) => string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
 
 // Initialize cache with 5 minutes TTL (300 seconds)
 const suggestionCache = new NodeCache({ stdTTL: 300 });
@@ -16,7 +20,7 @@ export const getTurfs = async (req, res, next) => {
     const query = { isActive: true, isApproved: true };
 
     if (city) {
-      query.city = new RegExp(city, 'i');
+      query.city = new RegExp(escapeRegExp(city), 'i');
     }
 
     if (sport) {
@@ -32,10 +36,11 @@ export const getTurfs = async (req, res, next) => {
     }
 
     if (search) {
+      const escapedSearch = escapeRegExp(search);
       query.$or = [
-        { name: new RegExp(search, 'i') },
-        { area: new RegExp(search, 'i') },
-        { city: new RegExp(search, 'i') },
+        { name: new RegExp(escapedSearch, 'i') },
+        { area: new RegExp(escapedSearch, 'i') },
+        { city: new RegExp(escapedSearch, 'i') },
       ];
     }
 
@@ -165,6 +170,28 @@ export const getMyTurfs = async (req, res, next) => {
   }
 };
 
+// @desc    Get distinct cities where active turfs are listed
+// @route   GET /api/turfs/cities/list
+// @access  Public
+export const getDistinctCities = async (req, res, next) => {
+  try {
+    const dbCities = await Turf.distinct('city', { isActive: true, isApproved: true });
+    
+    // Filter out null, undefined, non-string, or empty values from DB distinct query
+    const cleanDbCities = dbCities.filter(c => typeof c === 'string' && c.trim() !== '');
+    
+    // Fallback/standard cities list to merge with DB cities
+    const fallbackCities = ['Bhopal', 'Delhi', 'Mumbai', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Indore', 'London', 'Madrid', 'Dubai', 'Singapore'];
+    
+    // Unique list, sorted alphabetically
+    const uniqueCities = [...new Set([...cleanDbCities, ...fallbackCities])].sort((a, b) => a.localeCompare(b));
+    
+    res.status(200).json({ success: true, data: uniqueCities });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Search Autocomplete Suggestions
 // @route   GET /api/turfs/search/suggestions
 // @access  Public
@@ -184,7 +211,7 @@ export const searchSuggestions = async (req, res, next) => {
       return res.status(200).json({ success: true, data: cachedResponse, cached: true });
     }
 
-    const regex = new RegExp(searchQuery, 'i');
+    const regex = new RegExp(escapeRegExp(searchQuery), 'i');
 
     // Perform queries
     const turfsPromise = Turf.find({ name: regex, isActive: true, isApproved: true }, 'name city').limit(8);
@@ -220,6 +247,17 @@ export const checkSlotsAvailability = async (req, res, next) => {
   try {
     const { id, date } = req.params;
 
+    // Validate Turf ID format to prevent CastError
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid Turf ID format.' });
+    }
+
+    // Validate date format to prevent RangeError: Invalid time value
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ success: false, message: 'Invalid date format. Please use YYYY-MM-DD.' });
+    }
+
     const turf = await Turf.findById(id);
     if (!turf) {
       return res.status(404).json({ success: false, message: 'Turf not found.' });
@@ -230,7 +268,7 @@ export const checkSlotsAvailability = async (req, res, next) => {
 
     // If slots are not yet generated for this date, generate on demand
     if (dateSlots.length === 0) {
-      const allSlots = await generateWeekSlots(turf, new Date(date), 1);
+      const allSlots = await generateWeekSlots(turf, dateObj, 1);
       dateSlots = allSlots.filter(slot => slot.date === date);
     }
 

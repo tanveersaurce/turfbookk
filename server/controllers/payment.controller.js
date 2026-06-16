@@ -58,8 +58,11 @@ export const createOrder = async (req, res, next) => {
 // @access  Private
 export const verifyPayment = async (req, res, next) => {
   // Use a session for transaction to ensure atomic double-booking prevention
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
+  if (useTransaction && session) {
+    session.startTransaction();
+  }
 
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
@@ -75,22 +78,31 @@ export const verifyPayment = async (req, res, next) => {
     const isSignatureValid = expectedSignature === razorpay_signature;
 
     if (!isSignatureValid) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Invalid payment signature. Verification failed.' });
     }
 
     // Find booking
-    const booking = await Booking.findOne({ razorpayOrderId: razorpay_order_id }).session(session);
+    const booking = useTransaction
+      ? await Booking.findOne({ razorpayOrderId: razorpay_order_id }).session(session)
+      : await Booking.findOne({ razorpayOrderId: razorpay_order_id });
+      
     if (!booking) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(404).json({ success: false, message: 'Booking record not found for this payment order.' });
     }
 
     if (booking.status === 'confirmed') {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Booking is already confirmed.' });
     }
 
@@ -98,13 +110,18 @@ export const verifyPayment = async (req, res, next) => {
     booking.status = 'confirmed';
     booking.paymentStatus = 'paid';
     booking.razorpayPaymentId = razorpay_payment_id;
-    await booking.save({ session });
+    await booking.save(useTransaction ? { session } : {});
 
     // Check if slots are already booked by someone else (Double-booking prevention check)
-    const turf = await Turf.findById(booking.turf).session(session);
+    const turf = useTransaction
+      ? await Turf.findById(booking.turf).session(session)
+      : await Turf.findById(booking.turf);
+      
     if (!turf) {
-      await session.abortTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       return res.status(404).json({ success: false, message: 'Turf venue not found.' });
     }
 
@@ -121,10 +138,12 @@ export const verifyPayment = async (req, res, next) => {
       // Refund would be initiated in a real-world app, here we cancel and fail transaction
       booking.status = 'cancelled';
       booking.paymentStatus = 'refunded';
-      await booking.save({ session });
+      await booking.save(useTransaction ? { session } : {});
 
-      await session.commitTransaction();
-      session.endSession();
+      if (useTransaction && session) {
+        await session.commitTransaction();
+        session.endSession();
+      }
       return res.status(400).json({ success: false, message: 'Slot already booked by another user. Refund will be initiated.' });
     }
 
@@ -139,7 +158,7 @@ export const verifyPayment = async (req, res, next) => {
         slot.bookedBy = booking.user;
       }
     }
-    await turf.save({ session });
+    await turf.save(useTransaction ? { session } : {});
 
     // Create notification for user
     await Notification.create([{
@@ -148,7 +167,7 @@ export const verifyPayment = async (req, res, next) => {
       title: 'Booking Confirmed!',
       message: `Your booking at ${turf.name} for ${booking.date} at ${booking.startTime} - ${booking.endTime} is confirmed.`,
       link: `/booking-confirmed?id=${booking._id}`,
-    }], { session });
+    }], useTransaction ? { session } : {});
 
     // Create notification for owner
     await Notification.create([{
@@ -157,11 +176,13 @@ export const verifyPayment = async (req, res, next) => {
       title: 'New Turf Booking',
       message: `${turf.name} has been booked on ${booking.date} at ${booking.startTime} - ${booking.endTime}.`,
       link: `/owner/bookings`,
-    }], { session });
+    }], useTransaction ? { session } : {});
 
     // Commit Transaction
-    await session.commitTransaction();
-    session.endSession();
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
 
     // Fetch user email details to send confirmation (outside transaction to avoid external network locks)
     const user = await mongoose.model('User').findById(booking.user);

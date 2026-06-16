@@ -3,6 +3,9 @@ import Turf from '../models/Turf.js';
 import Booking from '../models/Booking.js';
 import Analytics from '../models/Analytics.js';
 
+// Escapes special characters for use in regular expressions
+const escapeRegExp = (string) => string ? string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
+
 // @desc    Get all users (Admin only)
 // @route   GET /api/admin/users
 // @access  Private (Admin only)
@@ -12,10 +15,11 @@ export const getAllUsers = async (req, res, next) => {
     const query = {};
 
     if (search) {
+      const escapedSearch = escapeRegExp(search);
       query.$or = [
-        { name: new RegExp(search, 'i') },
-        { email: new RegExp(search, 'i') },
-        { phone: new RegExp(search, 'i') },
+        { name: new RegExp(escapedSearch, 'i') },
+        { email: new RegExp(escapedSearch, 'i') },
+        { phone: new RegExp(escapedSearch, 'i') },
       ];
     }
 

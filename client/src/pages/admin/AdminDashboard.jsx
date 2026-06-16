@@ -89,25 +89,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleToggleTurfFeature = async (turfId) => {
-    try {
-      await adminService.toggleTurfFeature(turfId);
-      fetchAdminData();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleApproveTurf = async (turfId) => {
-    try {
-      await adminService.approveTurf(turfId);
-      alert('Turf venue approved successfully! It is now visible to users.');
-      fetchAdminData();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   const handleCreateAd = async (adData) => {
     try {
       await adminService.createAd({
@@ -169,7 +150,7 @@ export default function AdminDashboard() {
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'owners', label: 'Partner Queue', icon: UserCheck, badge: pendingApps.length },
     { id: 'applications', label: 'Partner Applications', icon: FileText, badge: pendingApps.length, path: '/admin/applications' },
-    { id: 'users', label: 'Users & Venues', icon: Users },
+    { id: 'users', label: 'User Management', icon: Users },
     { id: 'ads', label: 'Ad Manager', icon: Megaphone },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -287,19 +268,15 @@ export default function AdminDashboard() {
           {activeTab === 'owners' && (
             <PartnerQueue 
               applications={applications} 
-              turfs={turfs} 
               handleApproveOwner={handleApproveOwner} 
               handleRejectOwner={handleRejectOwner}
-              handleApproveTurf={handleApproveTurf}
             />
           )}
 
           {activeTab === 'users' && (
             <UsersVenuesList 
               users={users} 
-              turfs={turfs} 
               handleToggleUser={handleToggleUser} 
-              handleToggleTurfFeature={handleToggleTurfFeature}
             />
           )}
 

@@ -5,6 +5,7 @@ import { setSearchParams } from '../../store/turfSlice';
 import { turfService, adminService } from '../../services/api';
 import TurfCard from '../../components/turf/TurfCard';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
+import SearchableCityDropdown from '../../components/common/SearchableCityDropdown';
 import { Search, MapPin, Calendar, Award, ShieldCheck, ArrowRight, Star, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -26,15 +27,21 @@ export default function Home() {
     }
   }, [hash]);
 
-  const [city, setCity] = useState('Bhopal');
+  const { searchParams } = useSelector((state) => state.turf);
+  const [city, setCity] = useState(searchParams.city || 'Bhopal');
   const [sport, setSport] = useState('Football');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeAd, setActiveAd] = useState(null);
 
-  const cities = ['London', 'Madrid', 'Dubai', 'Singapore', 'Delhi', 'Mumbai', 'Bhopal'];
   const sports = ['Football', 'Cricket', 'Badminton', 'Basketball', 'Tennis'];
+
+  useEffect(() => {
+    if (searchParams.city) {
+      setCity(searchParams.city);
+    }
+  }, [searchParams.city]);
 
   const cityImages = {
     London: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=400&q=80',
@@ -170,16 +177,7 @@ export default function Home() {
                 {/* Location Input */}
                 <div className="space-y-0.5 text-left">
                   <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Location</label>
-                  <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <MapPin className="w-4 h-4 text-slate-400" />
-                    <select 
-                      value={city} 
-                      onChange={(e) => setCity(e.target.value)}
-                      className="bg-transparent text-xs text-slate-800 focus:outline-none w-full font-bold cursor-pointer"
-                    >
-                      {cities.map((c) => <option key={c} value={c} className="bg-white text-slate-800">{c}</option>)}
-                    </select>
-                  </div>
+                  <SearchableCityDropdown onChange={(c) => setCity(c)} />
                 </div>
 
                 {/* Activity Dropdown */}

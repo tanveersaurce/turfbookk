@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { setSelectedCity } from '../../store/turfSlice';
+import SearchableCityDropdown from '../../components/common/SearchableCityDropdown';
 import { turfService } from '../../services/api';
 import TurfCard from '../../components/turf/TurfCard';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
@@ -35,18 +38,20 @@ const sportsList = [
 
 export default function Search() {
   const [urlParams, setUrlParams] = useSearchParams();
+  const dispatch = useDispatch();
+  const reduxCity = useSelector((state) => state.turf.searchParams.city);
   
   // URL Param Sync
-  const [city, setCity] = useState(urlParams.get('city') || 'Bhopal');
+  const [city, setCity] = useState(urlParams.get('city') || reduxCity || 'Bhopal');
   const [sport, setSport] = useState(urlParams.get('sport') || 'Football');
   
   // Sidebar Filters local states
   const [minPrice] = useState(200);
   const [maxPrice, setMaxPrice] = useState(2000);
-  const [selectedRating, setSelectedRating] = useState(4); // default 4+ star
+  const [selectedRating, setSelectedRating] = useState(0); // default Any rating
   const [amenities, setAmenities] = useState({
     parking: false,
-    floodlights: true, // default checked in mockup
+    floodlights: false, // default unchecked to avoid hiding new turfs
     washroom: false,
     cafeteria: false
   });
@@ -64,9 +69,14 @@ export default function Search() {
   useEffect(() => {
     const urlCity = urlParams.get('city');
     const urlSport = urlParams.get('sport');
-    if (urlCity) setCity(urlCity);
+    if (urlCity) {
+      setCity(urlCity);
+      dispatch(setSelectedCity(urlCity));
+    } else if (reduxCity) {
+      setCity(reduxCity);
+    }
     if (urlSport) setSport(urlSport);
-  }, [urlParams]);
+  }, [urlParams, reduxCity]);
 
   useEffect(() => {
     const fetchFilteredTurfs = async () => {
@@ -86,8 +96,9 @@ export default function Search() {
     };
     fetchFilteredTurfs();
     
-    // Sync back to URL
+    // Sync back to URL and Redux
     setUrlParams({ city, sport });
+    dispatch(setSelectedCity(city));
   }, [city, sport]);
 
   const toggleAmenity = (name) => {
@@ -294,6 +305,19 @@ export default function Search() {
               >
                 Clear All
               </button>
+            </div>
+
+            <hr className="border-slate-100" />
+
+            {/* Location Filter */}
+            <div className="space-y-3">
+              <label className="block text-xs text-slate-500 font-bold uppercase tracking-wider">Location</label>
+              <SearchableCityDropdown 
+                onChange={(c) => {
+                  setCity(c);
+                  setUrlParams({ city: c, sport });
+                }} 
+              />
             </div>
 
             <hr className="border-slate-100" />
