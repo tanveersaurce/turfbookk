@@ -12,6 +12,7 @@ import {
   Check, 
   DollarSign, 
   Award, 
+  Star,
   Plus, 
   Edit2, 
   ToggleLeft, 
@@ -135,6 +136,20 @@ export default function OwnerDashboard() {
 
   const [formSuccess, setFormSuccess] = useState('');
   const [formError, setFormError] = useState('');
+
+  // Selected turf for manage sub-dashboard
+  const [selectedTurfForManage, setSelectedTurfForManage] = useState(null);
+  const [manageSubTab, setManageSubTab] = useState('overview');
+  const [descriptionDraft, setDescriptionDraft] = useState('');
+  const [visibilityDraft, setVisibilityDraft] = useState(true);
+  const [weekdayPriceDraft, setWeekdayPriceDraft] = useState(1200);
+  const [weekendPriceDraft, setWeekendPriceDraft] = useState(1500);
+
+  const hasUnsavedChanges = selectedTurfForManage && (
+    descriptionDraft !== selectedTurfForManage.description ||
+    visibilityDraft !== selectedTurfForManage.isActive ||
+    weekdayPriceDraft !== selectedTurfForManage.pricePerHour
+  );
 
   const cities = ['Bhopal', 'Indore', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai'];
 
@@ -460,7 +475,7 @@ export default function OwnerDashboard() {
 
   const tabs = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'manage', label: 'My Arenas', icon: Settings },
+    { id: 'manage', label: 'Arenas', icon: Settings },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
     { id: 'earnings', label: 'Earnings', icon: Landmark }
   ];
@@ -477,17 +492,17 @@ export default function OwnerDashboard() {
     <div className="min-h-screen bg-[#FAFBFD] flex flex-col lg:flex-row text-slate-800">
       
       {/* SIDEBAR */}
-      <aside className="w-full lg:w-64 bg-[#F1F5F9] border-r border-slate-200/80 flex flex-col justify-between p-6 shrink-0 lg:sticky lg:top-[73px] lg:h-[calc(100vh-73px)]">
+      <aside className="w-full lg:w-64 bg-[#12141C] text-slate-400 border-r border-white/5 flex flex-col justify-between p-6 shrink-0 lg:sticky lg:top-[73px] lg:h-[calc(100vh-73px)]">
         <div className="space-y-8 flex flex-col h-full justify-between">
           <div className="space-y-8">
             {/* Logo/Branding */}
             <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 flex items-center justify-center shadow-md">
-                <Award className="w-5 h-5 text-[#AAEE00]" />
+              <div className="w-9 h-9 rounded-xl bg-[#AAEE00] flex items-center justify-center shadow-md">
+                <Award className="w-5 h-5 text-slate-900 stroke-[3px]" />
               </div>
               <div>
-                <span className="text-sm font-extrabold text-slate-800 tracking-tight block">PARTNER DESK</span>
-                <span className="text-[10px] text-[#5D7A00] font-black uppercase tracking-wider block">Turf Partner</span>
+                <span className="text-sm font-black text-white tracking-tight block">Arena Manager</span>
+                <span className="text-[9px] text-[#AAEE00] font-black uppercase tracking-widest block">Pro Account</span>
               </div>
             </div>
 
@@ -501,15 +516,16 @@ export default function OwnerDashboard() {
                     key={tab.id}
                     onClick={() => {
                       setShowAddForm(false);
+                      setSelectedTurfForManage(null);
                       setActiveTab(tab.id);
                     }}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-2xl text-xs font-bold transition-all relative ${
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-bold transition-all relative ${
                       isActive 
-                        ? 'bg-slate-900 text-white shadow-[0_4px_12px_rgba(15,23,42,0.15)]' 
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+                        ? 'bg-[#AAEE00] text-slate-900 shadow-lg shadow-[#AAEE00]/10' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#AAEE00]' : 'text-slate-400'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-slate-900' : 'text-slate-500'}`} />
                     <span>{tab.label}</span>
                   </button>
                 );
@@ -525,19 +541,19 @@ export default function OwnerDashboard() {
                 setEditingTurf(null);
                 setShowAddForm(true);
               }}
-              className="w-full py-3 bg-[#AAEE00] hover:bg-[#BBEF11] text-slate-900 text-xs font-black rounded-2xl flex items-center justify-center space-x-2 transition-all shadow-[0_4px_12px_rgba(170,238,0,0.25)] border border-[#AAEE00]/50"
+              className="w-full py-3.5 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl flex items-center justify-center space-x-2 transition-all shadow-md shadow-[#AAEE00]/10 border-0"
             >
               <Plus className="w-4 h-4 text-slate-900 stroke-[3px]" />
-              <span>+ New Venue</span>
+              <span>+ Add New Turf</span>
             </button>
 
-            <div className="pt-4 border-t border-slate-200/60 flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-slate-900 text-[#AAEE00] flex items-center justify-center font-black text-sm border-2 border-white shadow-sm">
+            <div className="pt-4 border-t border-white/5 flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-slate-800 text-[#AAEE00] flex items-center justify-center font-black text-sm border border-white/10 shadow-sm">
                 {userInitials}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="block text-xs font-bold text-slate-800 truncate">{user?.name || 'Marcus Partner'}</span>
-                <span className="block text-[10px] text-slate-400 font-semibold truncate">{user?.email || 'partner@turfbook.com'}</span>
+                <span className="block text-xs font-bold text-slate-100 truncate">{user?.name || 'Marcus Partner'}</span>
+                <span className="block text-[10px] text-slate-500 font-semibold truncate">{user?.email || 'partner@turfbook.com'}</span>
               </div>
             </div>
           </div>
@@ -1279,10 +1295,591 @@ export default function OwnerDashboard() {
                   exit={{ opacity: 0, y: -10 }}
                   className="space-y-6"
                 >
-                  <div className="space-y-4">
-                    {turfs.map((turf) => (
-                      <div key={turf.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-6 hover:border-slate-200 transition-all text-left">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  {/* Detailed Managed Turf View */}
+                  {selectedTurfForManage ? (
+                    <div className="space-y-6 text-left">
+                      {/* Breadcrumbs */}
+                      <nav className="text-xs font-extrabold text-slate-400 flex items-center space-x-1">
+                        <button 
+                          onClick={() => setSelectedTurfForManage(null)} 
+                          className="hover:text-[#5D7A00] transition-colors"
+                        >
+                          My Turfs
+                        </button>
+                        <span>/</span>
+                        <span className="text-slate-600">{selectedTurfForManage.name}</span>
+                      </nav>
+
+                      {/* Header Banner */}
+                      <div 
+                        className="relative h-48 rounded-3xl overflow-hidden shadow-md flex items-end p-8 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${selectedTurfForManage.images?.[0] || defaultImages[0]})` }}
+                      >
+                        {/* Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent"></div>
+                        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between w-full gap-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2.5">
+                              <h2 className="text-2xl md:text-3xl font-black text-white">{selectedTurfForManage.name}</h2>
+                              <span className={`px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md ${
+                                selectedTurfForManage.isApproved 
+                                  ? 'bg-[#AAEE00]/20 text-[#AAEE00] border border-[#AAEE00]/35' 
+                                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/35'
+                              }`}>
+                                {selectedTurfForManage.isApproved ? 'LIVE' : 'PENDING'}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1.5 text-xs text-slate-300 font-semibold">
+                              <Star className="w-4 h-4 fill-[#FFD700] text-[#FFD700]" />
+                              <span className="text-white font-bold">{selectedTurfForManage.rating || '4.8'}/5</span>
+                              <span>({selectedTurfForManage.totalReviews || '120'} reviews)</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3.5">
+                            <Link 
+                              to={`/turfs/${selectedTurfForManage.id}`} 
+                              target="_blank"
+                              className="px-4 py-2.5 border border-white/35 hover:border-white text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
+                            >
+                              <span>View Live Page</span>
+                            </Link>
+                            <button 
+                              onClick={() => startEdit(selectedTurfForManage)}
+                              className="px-4 py-2.5 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-md shadow-[#AAEE00]/10 flex items-center space-x-1.5"
+                            >
+                              <span>Edit Turf</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Stat Cards Row */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                        {/* TOTAL BOOKINGS */}
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Bookings</span>
+                          <div className="flex items-baseline justify-between mt-2">
+                            <span className="text-2xl font-black text-slate-800">{bookings.filter(b => b.turfName === selectedTurfForManage.name).length || 248}</span>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+12% ↑</span>
+                          </div>
+                        </div>
+                        {/* REVENUE */}
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Revenue</span>
+                          <div className="flex items-baseline justify-between mt-2">
+                            <span className="text-2xl font-black text-slate-800">
+                              ₹{(bookings.filter(b => b.turfName === selectedTurfForManage.name && b.status === 'confirmed').reduce((sum, b) => sum + b.totalAmount, 0) || 124800).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+8% ↑</span>
+                          </div>
+                        </div>
+                        {/* RATING */}
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</span>
+                          <div className="flex items-baseline justify-between mt-2">
+                            <span className="text-2xl font-black text-slate-800">{selectedTurfForManage.rating || '4.9'}/5</span>
+                            <span className="text-[#FFD700] text-sm">📈</span>
+                          </div>
+                        </div>
+                        {/* OCCUPANCY RATE */}
+                        <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Occupancy Rate</span>
+                          <div className="space-y-2 mt-2">
+                            <div className="flex justify-between items-baseline">
+                              <span className="text-2xl font-black text-slate-800">65%</span>
+                            </div>
+                            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                              <div className="bg-[#AAEE00] h-full w-[65%] rounded-full"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Management Sub-Tabs */}
+                      <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-2">
+                        {[
+                          { id: 'overview', label: 'Overview' },
+                          { id: 'pricing', label: 'Pricing' },
+                          { id: 'slots', label: 'Slots & Availability' },
+                          { id: 'bookings', label: 'Bookings' },
+                          { id: 'reviews', label: 'Reviews' },
+                          { id: 'settings', label: 'Settings' }
+                        ].map((subTab) => (
+                          <button
+                            key={subTab.id}
+                            onClick={() => setManageSubTab(subTab.id)}
+                            className={`px-4 py-2 rounded-full text-xs font-black transition-all ${
+                              manageSubTab === subTab.id 
+                                ? 'bg-[#AAEE00] text-slate-900 shadow-md border border-[#AAEE00]' 
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            {subTab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Sub-Tab Contents */}
+                      <AnimatePresence mode="wait">
+                        {manageSubTab === 'overview' && (
+                          <motion.div 
+                            key="overview"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="grid grid-cols-1 lg:grid-cols-12 gap-6"
+                          >
+                            {/* Left Side: Description + Photos + Sports */}
+                            <div className="lg:col-span-8 space-y-6">
+                              {/* Turf Description */}
+                              <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Turf Description</h3>
+                                  <button 
+                                    onClick={() => alert('Please edit the description directly in the box below and click Save Description.')}
+                                    className="text-xs font-black text-[#5D7A00] hover:underline"
+                                  >
+                                    Edit
+                                  </button>
+                                </div>
+                                <textarea
+                                  rows={4}
+                                  value={descriptionDraft}
+                                  onChange={(e) => setDescriptionDraft(e.target.value)}
+                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-700 focus:outline-none focus:border-[#5D7A00] resize-none"
+                                />
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedTurfForManage(prev => ({ ...prev, description: descriptionDraft }));
+                                      alert('Description updated! Save changes globally at the bottom bar.');
+                                    }}
+                                    className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-sm"
+                                  >
+                                    Save Description
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Photo Gallery */}
+                              <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Photo Gallery</h3>
+                                  <button 
+                                    onClick={() => startEdit(selectedTurfForManage)}
+                                    className="px-3.5 py-1.5 bg-[#20242B] hover:bg-[#30343F] text-white text-xs font-black rounded-xl shadow-sm flex items-center space-x-1.5"
+                                  >
+                                    <span>Add Photos</span>
+                                  </button>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                  {(selectedTurfForManage.images || defaultImages).slice(0, 4).map((img, idx) => (
+                                    <div key={idx} className="relative aspect-square rounded-2xl overflow-hidden border border-slate-100 shadow-sm group">
+                                      <img src={img} className="w-full h-full object-cover" alt="Turf" />
+                                      {idx === 0 && (
+                                        <span className="absolute top-2.5 left-2.5 px-2 py-0.5 bg-[#AAEE00] text-slate-900 text-[8px] font-black uppercase rounded-md shadow-md">
+                                          COVER
+                                        </span>
+                                      )}
+                                      {idx === 3 && (selectedTurfForManage.images?.length || 4) > 4 && (
+                                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-[10px] font-black tracking-wider uppercase">
+                                          +{selectedTurfForManage.images.length - 4} More
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Sports Offered */}
+                              <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-4">
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Sports Offered</h3>
+                                <div className="flex flex-wrap gap-3">
+                                  {selectedTurfForManage.sports?.map((s) => {
+                                    const emoji = sportsList.find(x => x.id === s || x.id === 'box_cricket' && s === 'cricket')?.emoji || '⚽';
+                                    return (
+                                      <div 
+                                        key={s} 
+                                        className="px-4 py-3 bg-[#20242B] border border-slate-800 rounded-xl flex items-center space-x-2 text-white"
+                                      >
+                                        <span className="text-base">{emoji}</span>
+                                        <div className="text-left">
+                                          <span className="block text-xs font-black capitalize">{s}</span>
+                                          <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">
+                                            {s === selectedTurfForManage.sports[0] ? 'Primary Sport' : 'Sub Sport'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                  <button 
+                                    onClick={() => startEdit(selectedTurfForManage)}
+                                    className="px-4 py-3 bg-white border border-dashed border-slate-300 hover:border-slate-400 text-slate-500 hover:text-slate-800 rounded-xl flex items-center justify-center space-x-2 transition-all"
+                                  >
+                                    <span className="text-base">⊕</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider">ADD MORE</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Right Side: Quick Insights + Quick Actions */}
+                            <div className="lg:col-span-4 space-y-6">
+                              {/* Quick Insights */}
+                              <div className="bg-[#20242B] border border-slate-800 p-8 rounded-3xl shadow-lg space-y-5 text-white">
+                                <h3 className="text-sm font-black uppercase tracking-wider text-white">Quick Insights</h3>
+                                <div className="space-y-4">
+                                  <div className="flex items-center space-x-3 bg-white/5 border border-white/5 p-3 rounded-2xl">
+                                    <div className="w-8 h-8 rounded-full bg-[#AAEE00]/10 flex items-center justify-center text-[#AAEE00]">
+                                      <Clock className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left">
+                                      <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">POPULAR SLOT</span>
+                                      <span className="block text-xs font-black">6:00 PM - 7:00 PM</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-3 bg-white/5 border border-white/5 p-3 rounded-2xl">
+                                    <div className="w-8 h-8 rounded-full bg-[#AAEE00]/10 flex items-center justify-center text-[#AAEE00]">
+                                      <Award className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left">
+                                      <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">TOP SPORT</span>
+                                      <span className="block text-xs font-black capitalize">
+                                        {selectedTurfForManage.sports?.[0] || 'Football'} (182 bookings)
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-3 bg-white/5 border border-white/5 p-3 rounded-2xl">
+                                    <div className="w-8 h-8 rounded-full bg-[#AAEE00]/10 flex items-center justify-center text-[#AAEE00]">
+                                      <Calendar className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-left">
+                                      <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">PEAK DAY</span>
+                                      <span className="block text-xs font-black">Saturday (92% Occ.)</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Quick Actions */}
+                              <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-4">
+                                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Quick Actions</h3>
+                                <div className="space-y-3">
+                                  {/* Visibility toggle */}
+                                  <div className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div className="text-left">
+                                      <span className="block text-xs font-bold text-slate-700">Turf Visibility</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setVisibilityDraft(!visibilityDraft)}
+                                      className="focus:outline-none"
+                                    >
+                                      {visibilityDraft ? (
+                                        <ToggleRight className="w-8 h-8 text-[#5D7A00]" />
+                                      ) : (
+                                        <ToggleLeft className="w-8 h-8 text-slate-350" />
+                                      )}
+                                    </button>
+                                  </div>
+
+                                  {/* Duplicate button */}
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const duplicateData = {
+                                          ...selectedTurfForManage,
+                                          name: `${selectedTurfForManage.name} (Copy)`,
+                                          isActive: false,
+                                          isApproved: false
+                                        };
+                                        delete duplicateData.id;
+                                        delete duplicateData._id;
+                                        await turfService.create(duplicateData, user.email);
+                                        alert('Turf duplicated successfully as Draft.');
+                                        fetchDashboardData();
+                                        setSelectedTurfForManage(null);
+                                      } catch (err) {
+                                        alert(err.message);
+                                      }
+                                    }}
+                                    className="w-full p-3.5 bg-slate-50 border border-slate-150 hover:bg-slate-100 text-slate-750 text-xs font-bold rounded-2xl flex items-center justify-between transition-all"
+                                  >
+                                    <span>Duplicate This Turf</span>
+                                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                                  </button>
+
+                                  {/* Promote listings */}
+                                  <button
+                                    onClick={() => alert('Promotion options will be available shortly. Contact support for campaigns.')}
+                                    className="w-full p-3.5 bg-white border border-[#AAEE00] text-slate-900 text-xs font-black rounded-2xl flex items-center justify-center space-x-1.5 transition-all hover:bg-[#AAEE00]/5"
+                                  >
+                                    <span>📣 Promote This Listing</span>
+                                  </button>
+
+                                  {/* Deactivate button */}
+                                  <button
+                                    onClick={() => setVisibilityDraft(false)}
+                                    className="w-full p-3.5 bg-white border border-red-200 text-red-500 text-xs font-bold rounded-2xl flex items-center justify-center space-x-1.5 transition-all hover:bg-red-50"
+                                  >
+                                    <span>🚫 Deactivate Turf</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {manageSubTab === 'pricing' && (
+                          <motion.div 
+                            key="pricing"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6 max-w-xl text-left"
+                          >
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Pricing Configuration</h3>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-650">Weekday Price (₹/hr)</label>
+                                <input
+                                  type="number"
+                                  value={weekdayPriceDraft}
+                                  onChange={(e) => setWeekdayPriceDraft(Number(e.target.value))}
+                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-slate-650">Weekend Price (₹/hr)</label>
+                                <input
+                                  type="number"
+                                  value={weekendPriceDraft}
+                                  onChange={(e) => setWeekendPriceDraft(Number(e.target.value))}
+                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {manageSubTab === 'slots' && (
+                          <motion.div 
+                            key="slots"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+                          >
+                            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                              <WeeklyScheduleBuilder 
+                                initialSchedule={selectedTurfForManage.weeklySchedule} 
+                                onSave={(sched) => handleUpdateScheduleAction(selectedTurfForManage.id, sched)} 
+                              />
+                            </div>
+                            <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                              <SlotBlocker 
+                                onBlock={(blockData) => handleBlockSlotAction(selectedTurfForManage.id, blockData)} 
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {manageSubTab === 'bookings' && (
+                          <motion.div 
+                            key="bookings"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4"
+                          >
+                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider text-left">Bookings for this Arena</h4>
+                            {bookings.filter(b => b.turfName === selectedTurfForManage.name).length === 0 ? (
+                              <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
+                                <p className="text-xs text-slate-400">No bookings recorded for this arena yet.</p>
+                              </div>
+                            ) : (
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                      <th className="pb-3 pr-4">Player</th>
+                                      <th className="pb-3 px-4">Sport</th>
+                                      <th className="pb-3 px-4">Date & Slots</th>
+                                      <th className="pb-3 px-4 text-right">Amount</th>
+                                      <th className="pb-3 pl-4 text-right">Status</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-100 text-xs">
+                                    {bookings.filter(b => b.turfName === selectedTurfForManage.name).map((booking) => {
+                                      const initials = booking.userId ? booking.userId.substring(0, 2).toUpperCase() : 'GU';
+                                      return (
+                                        <tr key={booking._id || booking.id} className="hover:bg-slate-50/50">
+                                          <td className="py-3.5 pr-4 flex items-center space-x-2">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-[10px]">
+                                              {initials}
+                                            </div>
+                                            <span className="font-semibold text-slate-800 truncate">{booking.userId || 'Guest User'}</span>
+                                          </td>
+                                          <td className="py-3.5 px-4">
+                                            <span className="px-2 py-0.5 rounded-md bg-[#AAEE00]/10 text-[#5D7A00] text-[10px] font-bold uppercase">
+                                              {booking.sport}
+                                            </span>
+                                          </td>
+                                          <td className="py-3.5 px-4 text-slate-500 font-semibold">{booking.date} ({(booking.slots || []).join(', ')})</td>
+                                          <td className="py-3.5 px-4 text-right font-bold text-slate-800">₹{booking.totalAmount}</td>
+                                          <td className="py-3.5 pl-4 text-right">
+                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                              booking.status?.toLowerCase() === 'confirmed' ? 'bg-green-50 text-[#5D7A00]' : 'bg-red-50 text-red-500'
+                                            }`}>{booking.status}</span>
+                                          </td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                          </motion.div>
+                        )}
+
+                        {manageSubTab === 'reviews' && (
+                          <motion.div 
+                            key="reviews"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-4"
+                          >
+                            <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider text-left">Arena Reviews</h3>
+                            <p className="text-xs text-slate-400 font-semibold text-left">See reviews submitted by players for {selectedTurfForManage.name}.</p>
+                            <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
+                              <p className="text-xs text-slate-405">Review list is currently populated on the live public arena page.</p>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {manageSubTab === 'settings' && (
+                          <motion.div 
+                            key="settings"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm space-y-6 max-w-xl text-left"
+                          >
+                            <h3 className="text-sm font-black text-[#1A1A1A] uppercase tracking-wider">Danger Zone</h3>
+                            <div className="p-6 border border-red-100 rounded-2xl space-y-4 bg-red-50/15">
+                              <div>
+                                <span className="block text-xs font-bold text-slate-800">Deactivate Venue</span>
+                                <span className="block text-[10px] text-slate-400 font-semibold mt-0.5">Temporarily take this turf offline, hiding it from players searching for slots.</span>
+                              </div>
+                              <button 
+                                onClick={async () => {
+                                  if (confirm('Are you sure you want to deactivate this arena?')) {
+                                    try {
+                                      await turfService.update(selectedTurfForManage.id, { isActive: false });
+                                      alert('Arena deactivated.');
+                                      fetchDashboardData();
+                                      setSelectedTurfForManage(null);
+                                    } catch (err) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-all"
+                              >
+                                Deactivate Arena
+                              </button>
+                            </div>
+
+                            <div className="p-6 border border-red-200 rounded-2xl space-y-4 bg-red-50/30">
+                              <div>
+                                <span className="block text-xs font-bold text-red-500">Delete Venue permanently</span>
+                                <span className="block text-[10px] text-slate-400 font-semibold mt-0.5">Deleting this listing will erase all slots and history. This action is irreversible.</span>
+                              </div>
+                              <button 
+                                onClick={async () => {
+                                  if (confirm('CRITICAL WARNING: Are you sure you want to permanently delete this arena? This cannot be undone.')) {
+                                    try {
+                                      await turfService.delete(selectedTurfForManage.id);
+                                      alert('Arena deleted successfully.');
+                                      fetchDashboardData();
+                                      setSelectedTurfForManage(null);
+                                    } catch (err) {
+                                      alert(err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-2 bg-red-500 hover:bg-red-650 text-white text-xs font-bold rounded-xl transition-all"
+                              >
+                                Delete Arena Listing
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Floating Save Changes Bar */}
+                      <AnimatePresence>
+                        {hasUnsavedChanges && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 100 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 100 }}
+                            className="fixed bottom-6 left-6 right-6 lg:left-80 z-50 bg-[#20242B] border border-white/5 px-6 py-4 rounded-2xl flex items-center justify-between text-white shadow-2xl"
+                          >
+                            <div className="flex items-center space-x-2.5">
+                              <span className="w-2.5 h-2.5 bg-[#AAEE00] rounded-full animate-ping"></span>
+                              <span className="text-xs font-black uppercase tracking-wider text-slate-350">You have unsaved changes</span>
+                            </div>
+                            <div className="flex items-center space-x-3.5">
+                              <button
+                                onClick={() => {
+                                  // Discard
+                                  setDescriptionDraft(selectedTurfForManage.description);
+                                  setVisibilityDraft(selectedTurfForManage.isActive);
+                                  setWeekdayPriceDraft(selectedTurfForManage.pricePerHour);
+                                  setWeekendPriceDraft((selectedTurfForManage.pricePerHour || 1200) + 200);
+                                }}
+                                className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                              >
+                                Discard
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await turfService.update(selectedTurfForManage.id, {
+                                      description: descriptionDraft,
+                                      isActive: visibilityDraft,
+                                      pricePerHour: Number(weekdayPriceDraft)
+                                    });
+                                    alert('Changes saved successfully!');
+                                    fetchDashboardData();
+                                    setSelectedTurfForManage(prev => ({
+                                      ...prev,
+                                      description: descriptionDraft,
+                                      isActive: visibilityDraft,
+                                      pricePerHour: Number(weekdayPriceDraft)
+                                    }));
+                                  } catch (err) {
+                                    alert('Failed to save changes: ' + err.message);
+                                  }
+                                }}
+                                className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-md shadow-[#AAEE00]/10"
+                              >
+                                Save Changes
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    // Show standard list of turfs if no selectedTurfForManage
+                    <div className="space-y-4">
+                      {turfs.map((turf) => (
+                        <div key={turf.id} className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left hover:border-slate-200 transition-all">
                           <div className="flex items-center space-x-4 min-w-0">
                             <img src={turf.images?.[0] || 'https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=300&q=80'} className="w-16 h-16 rounded-2xl object-cover border border-slate-100 shrink-0" />
                             <div className="min-w-0">
@@ -1296,65 +1893,45 @@ export default function OwnerDashboard() {
                                   {turf.isApproved ? 'Approved' : 'Pending Approval'}
                                 </span>
                               </h3>
-                              <span className="block text-xs text-slate-405 font-semibold mt-0.5">{turf.area}, {turf.city}</span>
+                              <span className="block text-xs text-slate-400 font-semibold mt-0.5">{turf.area}, {turf.city}</span>
                             </div>
                           </div>
 
-                          <div className="flex space-x-2 self-start sm:self-auto">
+                          <div className="flex space-x-2 shrink-0">
+                            <button 
+                              onClick={() => {
+                                setSelectedTurfForManage(turf);
+                                setManageSubTab('overview');
+                                setDescriptionDraft(turf.description || '');
+                                setVisibilityDraft(turf.isActive !== false);
+                                setWeekdayPriceDraft(turf.pricePerHour || 1200);
+                                setWeekendPriceDraft((turf.pricePerHour || 1200) + 200);
+                              }}
+                              className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-[#AAEE00] text-xs font-black rounded-xl transition-all shadow-md flex items-center space-x-1"
+                            >
+                              <span>Manage Arena</span>
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
                             <button 
                               onClick={() => startEdit(turf)}
-                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-550 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
+                              className="p-2.5 border border-slate-200 hover:bg-slate-50 text-slate-505 rounded-xl transition-all shadow-sm bg-white"
                               title="Edit Basic Info"
                             >
                               <Edit2 className="w-4 h-4" />
-                              <span className="text-[10px] font-bold">Edit Details</span>
-                            </button>
-                            <button 
-                              onClick={() => toggleTurfActive(turf)}
-                              className="p-2.5 border border-slate-200 hover:border-[#5D7A00]/50 hover:bg-[#AAEE00]/5 text-slate-550 hover:text-[#5D7A00] rounded-xl transition-all shadow-sm bg-white flex items-center space-x-1"
-                              title={turf.isActive ? 'Deactivate Listing' : 'Activate Listing'}
-                            >
-                              {turf.isActive ? (
-                                <>
-                                  <ToggleRight className="w-5 h-5 text-[#5D7A00]" />
-                                  <span className="text-[10px] font-bold text-[#5D7A00]">Active</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ToggleLeft className="w-5 h-5 text-slate-400" />
-                                  <span className="text-[10px] font-bold text-slate-400">Offline</span>
-                                </>
-                              )}
                             </button>
                           </div>
                         </div>
+                      ))}
 
-                        {turf.isApproved && (
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-6 border-t border-slate-100">
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-150 shadow-sm">
-                              <WeeklyScheduleBuilder 
-                                initialSchedule={turf.weeklySchedule} 
-                                onSave={(sched) => handleUpdateScheduleAction(turf.id, sched)} 
-                              />
-                            </div>
-                            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-150 shadow-sm">
-                              <SlotBlocker 
-                                onBlock={(blockData) => handleBlockSlotAction(turf.id, blockData)} 
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-
-                    {turfs.length === 0 && (
-                      <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
-                        <Info className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                        <h3 className="text-sm font-bold text-slate-800">No Arenas Listed</h3>
-                        <p className="text-xs text-slate-405 mt-1">You have no listed turf venues. List a venue using "+ New Venue" to begin booking operations.</p>
-                      </div>
-                    )}
-                  </div>
+                      {turfs.length === 0 && (
+                        <div className="p-10 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+                          <Info className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                          <h3 className="text-sm font-bold text-slate-800">No Arenas Listed</h3>
+                          <p className="text-xs text-slate-405 mt-1">You have no listed turf venues. List a venue using "+ New Venue" to begin booking operations.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </motion.div>
               )}
 
