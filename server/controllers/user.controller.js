@@ -84,11 +84,11 @@ export const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      return res.status(400).json({ success: false, message: 'Please provide current password, new password, and confirm password.' });
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide current password and new password.' });
     }
 
-    if (newPassword !== confirmPassword) {
+    if (confirmPassword && newPassword !== confirmPassword) {
       return res.status(400).json({ success: false, message: 'New password and confirm password do not match.' });
     }
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { ProtectedRoute } from './guards/ProtectedRoute';
 import useAuth from './hooks/useAuth';
 
@@ -39,6 +39,17 @@ import QuickLoginModal from './components/common/QuickLoginModal';
 
 function App() {
   const { loadCurrentUser } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const token = localStorage.getItem('tb_token');

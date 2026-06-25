@@ -14,6 +14,14 @@ export const register = async (req, res, next) => {
   try {
     const { name, email, password, phone, city, role } = req.body;
 
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Please fill in all required fields (name, email, password).' });
+    }
+
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid format for email or password.' });
+    }
+
     if (role && role !== 'user') {
       return res.status(400).json({ success: false, message: 'Direct registration of roles other than user is restricted. Owners must submit partner applications.' });
     }
