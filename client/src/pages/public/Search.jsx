@@ -97,7 +97,7 @@ export default function Search() {
     fetchFilteredTurfs();
     
     // Sync back to URL and Redux
-    setUrlParams({ city, sport });
+    setUrlParams({ city, sport }, { replace: true });
     dispatch(setSelectedCity(city));
   }, [city, sport]);
 
@@ -315,7 +315,6 @@ export default function Search() {
               <SearchableCityDropdown 
                 onChange={(c) => {
                   setCity(c);
-                  setUrlParams({ city: c, sport });
                 }} 
               />
             </div>

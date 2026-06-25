@@ -157,7 +157,7 @@ export default function UserDashboard() {
     }
 
     try {
-      const res = await userService.changePassword({ currentPassword, newPassword });
+      const res = await userService.changePassword({ currentPassword, newPassword, confirmPassword });
       if (res.success) {
         setSecuritySuccess(true);
         setCurrentPassword('');
