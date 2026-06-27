@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import dns from 'dns';
 import User from './models/User.js';
 import Turf from './models/Turf.js';
 import Booking from './models/Booking.js';
@@ -16,6 +17,14 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/turfbook';
 const seed = async () => {
   try {
     console.log('🌱 Starting database seeding process...');
+    
+    // Configure DNS to bypass local ISP lookup issues for MongoDB Atlas
+    try {
+      dns.setServers(['8.8.8.8', '1.1.1.1']);
+    } catch (dnsErr) {
+      console.warn('⚠️ Failed to configure DNS servers:', dnsErr.message);
+    }
+
     await mongoose.connect(MONGO_URI);
     console.log('📡 Connected to MongoDB Database.');
 
