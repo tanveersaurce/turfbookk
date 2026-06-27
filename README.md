@@ -115,7 +115,7 @@ turfbook/
    
    **Default Login Accounts:**
    * **Admin User**: `admin@turfbook.com` / `Admin@123`
-   * **Owner User**: `rahul@owner.com` / `Owner@123`
+   * **Owner User**: `rahul@owner.com` / `  `
    * **Regular User**: `kabir@gmail.com` / `User@123`
 
 ---
