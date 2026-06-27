@@ -468,7 +468,7 @@ export default function Home() {
               </p>
             </div>
             <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'email_register', role: 'owner' } }))}
+              onClick={() => navigate('/become-partner')}
               className="px-6 py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shrink-0 text-center w-full md:w-auto cursor-pointer"
             >
               List Your Turf

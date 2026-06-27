@@ -57,7 +57,7 @@ export const useRazorpay = () => {
         bookingId: orderData.bookingId,
       },
       theme: {
-        color: '#AAEE00', // Lime green design system accent
+        color: '#1A1A1A', // Premium dark slate/near black design accent
       },
       handler: async function (response) {
         setIsProcessing(false);
