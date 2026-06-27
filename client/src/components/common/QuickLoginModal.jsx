@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { authStart, authSuccess, authFailure } from '../../store/authSlice';
 import { authService } from '../../services/api';
-import { X, Mail, Phone, Lock, AlertCircle, User, Award, CheckCircle2, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { X, Mail, Phone, Lock, AlertCircle, User, Award, CheckCircle2, Eye, EyeOff, ArrowRight, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function QuickLoginModal() {
@@ -16,6 +16,7 @@ export default function QuickLoginModal() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phoneReg, setPhoneReg] = useState('');
+  const [city, setCity] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +38,7 @@ export default function QuickLoginModal() {
       setPassword('');
       setName('');
       setPhoneReg('');
+      setCity('');
       setConfirmPassword('');
       setAgreed(false);
       setShowPassword(false);
@@ -75,7 +77,7 @@ export default function QuickLoginModal() {
         return;
       }
     } else {
-      if (!name || !email || !password || !phoneReg || !confirmPassword) {
+      if (!name || !email || !password || !phoneReg || !city || !confirmPassword) {
         setValidationError('All fields are required.');
         return;
       }
@@ -135,7 +137,7 @@ export default function QuickLoginModal() {
           phone: phoneReg,
           password,
           role,
-          city: 'Madrid'
+          city
         });
         if (response.success) {
           dispatch(authSuccess({ user: response.data, token: localStorage.getItem('tb_token') }));
@@ -494,6 +496,22 @@ export default function QuickLoginModal() {
                             required
                           />
                         </div>
+                      </div>
+                    </div>
+
+                    {/* City */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">City</label>
+                      <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                        <input 
+                          type="text"
+                          placeholder="e.g. Bhopal"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400"
+                          required
+                        />
                       </div>
                     </div>
 
