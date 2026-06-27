@@ -3,13 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { authStart, authSuccess, authFailure } from '../../store/authSlice';
 import { authService } from '../../services/api';
-import { ArrowRight, AlertCircle, ShieldCheck, CheckCircle2, User, Mail, Phone, Lock } from 'lucide-react';
+import { ArrowRight, AlertCircle, ShieldCheck, CheckCircle2, User, Mail, Phone, Lock, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [city, setCity] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
@@ -24,7 +25,7 @@ export default function Register() {
     e.preventDefault();
     setValidationError('');
 
-    if (!name || !email || !phone || !password || !confirmPassword) {
+    if (!name || !email || !phone || !city || !password || !confirmPassword) {
       setValidationError('Please fill in all fields.');
       return;
     }
@@ -47,7 +48,7 @@ export default function Register() {
         phone,
         password,
         role: 'user',
-        city: 'Madrid' // default city
+        city
       });
 
       if (response.success) {
@@ -187,6 +188,22 @@ export default function Register() {
                     required
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* City */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700">City</label>
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                <input 
+                  type="text"
+                  placeholder="e.g. Bhopal"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400"
+                  required
+                />
               </div>
             </div>
 
