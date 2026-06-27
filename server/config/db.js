@@ -1,7 +1,15 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import dns from 'dns';
 
 dotenv.config();
+
+// Force node to resolve DNS using Google/Cloudflare DNS to bypass local ISP DNS SRV lookup issues
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (dnsErr) {
+  console.warn('⚠️ Failed to configure DNS servers:', dnsErr.message);
+}
 
 const connectDB = async () => {
   try {
