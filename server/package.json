@@ -30,7 +30,10 @@
     "qrcode": "^1.5.3",
     "razorpay": "^2.9.2",
     "socket.io": "^4.8.3",
+<<<<<<< HEAD
     "turfbook-parent": "file:..",
+=======
+>>>>>>> 2f0a177e57ef9730224c412cf58f241a1c9f170b
     "xss-clean": "^0.1.4",
     "zod": "^4.4.3"
   }

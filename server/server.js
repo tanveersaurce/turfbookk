@@ -90,3 +90,7 @@ server.listen(PORT, () => {
   console.log(`📡 Health Check: http://localhost:${PORT}/health`);
   console.log(`🔌 WebSockets active on same port.`);
 });
+<<<<<<< HEAD
+=======
+// Watcher trigger comment
+>>>>>>> 2f0a177e57ef9730224c412cf58f241a1c9f170b
