@@ -27,14 +27,9 @@ export const createOrder = async (req, res, next) => {
     }
 
     const razorpay = getRazorpayInstance();
-<<<<<<< HEAD
-    const options = {
-      amount: booking.totalAmount * 100, // Razorpay expects amount in paise
-=======
     const advanceAmount = Math.round(booking.totalAmount * 0.20);
     const options = {
       amount: advanceAmount * 100, // Razorpay expects amount in paise
->>>>>>> 2f0a177e57ef9730224c412cf58f241a1c9f170b
       currency: 'INR',
       receipt: booking.bookingId,
     };
