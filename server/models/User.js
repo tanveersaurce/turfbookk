@@ -53,6 +53,12 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  resetPasswordOTP: {
+    type: String,
+  },
+  resetPasswordOTPExpires: {
+    type: Date,
+  },
 }, { timestamps: true });
 
 // Pre-save password hashing

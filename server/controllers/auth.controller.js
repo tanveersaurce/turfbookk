@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import PartnerApplication from '../models/PartnerApplication.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
-import { welcomeEmail, resetPasswordEmail } from '../utils/emailTemplates.js';
+import { welcomeEmail, resetPasswordEmail, resetPasswordOTPEmail } from '../utils/emailTemplates.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_tb_123';
 
@@ -173,35 +173,41 @@ export const getMe = async (req, res, next) => {
   }
 };
 
-// @desc    Forgot Password - request reset link
+// @desc    Forgot Password - request reset OTP code
 // @route   POST /api/auth/forgot-password
 // @access  Public
 export const forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
 
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Please provide your email address.' });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(404).json({ success: false, message: 'There is no user registered with that email.' });
     }
 
-    // Generate a reset token (JWT expiring in 15 minutes)
-    const resetToken = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '15m' });
+    // Generate a 6-digit verification code (OTP)
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Create reset URL
-    const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    // Save OTP and expiry (15 minutes) on the user document
+    user.resetPasswordOTP = otp;
+    user.resetPasswordOTPExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
 
-    // Send password reset email
+    // Send password reset OTP email
     try {
       await sendEmail({
         to: user.email,
-        subject: 'TurfBook Password Reset Request',
-        html: resetPasswordEmail(user, resetUrl),
+        subject: 'TurfBook Password Reset Code',
+        html: resetPasswordOTPEmail(user, otp),
       });
 
-      res.status(200).json({ success: true, message: 'Password reset link sent to your email.' });
+      res.status(200).json({ success: true, message: '6-digit verification code sent to your email.' });
     } catch (emailErr) {
-      console.error('Password reset email failed to send:', emailErr.message);
+      console.error('Password reset OTP email failed to send:', emailErr.message);
       res.status(500).json({ success: false, message: 'Email could not be sent. Please try again later.' });
     }
   } catch (error) {
@@ -209,34 +215,32 @@ export const forgotPassword = async (req, res, next) => {
   }
 };
 
-// @desc    Reset Password using token
-// @route   POST /api/auth/reset-password/:token
+// @desc    Reset Password using OTP code
+// @route   POST /api/auth/reset-password
 // @access  Public
 export const resetPassword = async (req, res, next) => {
   try {
-    const { token } = req.params;
-    const { password } = req.body;
+    const { email, otp, password } = req.body;
 
-    if (!password) {
-      return res.status(400).json({ success: false, message: 'Please provide a new password.' });
+    if (!email || !otp || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide email, verification code (OTP), and new password.' });
     }
 
-    // Verify token
-    let decoded;
-    try {
-      decoded = jwt.verify(token, JWT_SECRET);
-    } catch (jwtErr) {
-      return res.status(400).json({ success: false, message: 'Password reset token is invalid or has expired.' });
-    }
-
-    // Find user by id
-    const user = await User.findById(decoded.id);
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User no longer exists.' });
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Verify OTP code
+    if (!user.resetPasswordOTP || user.resetPasswordOTP !== otp || !user.resetPasswordOTPExpires || user.resetPasswordOTPExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired verification code (OTP).' });
     }
 
     // Update password (triggers hashing pre-save hook)
     user.passwordHash = password;
+    user.resetPasswordOTP = undefined;
+    user.resetPasswordOTPExpires = undefined;
     await user.save();
 
     res.status(200).json({ success: true, message: 'Password updated successfully. You can now log in.' });

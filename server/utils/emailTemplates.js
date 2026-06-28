@@ -97,6 +97,53 @@ export const resetPasswordEmail = (user, resetUrl) => {
   `;
 };
 
+export const resetPasswordOTPEmail = (user, otpCode) => {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; color: #191c1d; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+          .header { background-color: #1A1A1A; padding: 30px; text-align: center; }
+          .header h1 { color: #AAEE00; margin: 0; font-size: 28px; font-weight: 800; }
+          .content { padding: 40px 30px; }
+          .content h2 { font-size: 22px; margin-top: 0; font-weight: 700; color: #1A1A1A; }
+          .content p { font-size: 16px; line-height: 24px; color: #5f5e5e; }
+          .otp-container { text-align: center; margin: 30px 0; }
+          .otp-code { background-color: #f1f5f9; color: #1a1a1a; font-size: 32px; font-weight: 800; letter-spacing: 6px; padding: 16px 32px; border-radius: 12px; display: inline-block; border: 1px solid #e2e8f0; }
+          .warning { margin-top: 25px; padding: 15px; background-color: #ffdad6; border-left: 4px solid #ba1a1a; border-radius: 6px; }
+          .warning p { color: #ba1a1a; margin: 0; font-size: 14px; font-weight: 500; }
+          .footer { background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #edeeef; }
+          .footer p { font-size: 12px; color: #c8c6c5; margin: 0; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>TurfBook</h1>
+          </div>
+          <div class="content">
+            <h2>Reset Your Password</h2>
+            <p>Hello ${user.name},</p>
+            <p>You requested to reset your password for your TurfBook account. Use the 6-digit verification code below to proceed:</p>
+            <div class="otp-container">
+              <span class="otp-code">${otpCode}</span>
+            </div>
+            <div class="warning">
+              <p>⚠️ This code will expire in 15 minutes. If you did not request a password reset, please ignore this email and your password will remain unchanged.</p>
+            </div>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} TurfBook. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
+
 export const bookingConfirmationEmail = (booking, user, turf) => {
   return `
     <!DOCTYPE html>

@@ -21,6 +21,9 @@ export default function QuickLoginModal() {
   const [agreed, setAgreed] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [otp, setOtp] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [localLoading, setLocalLoading] = useState(false);
   
   const { loading, error } = useSelector((state) => state.auth);
   const { currentBooking } = useSelector((state) => state.booking);
@@ -43,6 +46,9 @@ export default function QuickLoginModal() {
       setAgreed(false);
       setShowPassword(false);
       setValidationError('');
+      setOtp('');
+      setSuccessMessage('');
+      setLocalLoading(false);
     };
 
     window.addEventListener('show-login', handleOpen);
@@ -156,6 +162,75 @@ export default function QuickLoginModal() {
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Authentication Failed';
       dispatch(authFailure(msg));
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setValidationError('');
+    setSuccessMessage('');
+
+    if (!email) {
+      setValidationError('Please enter your email address.');
+      return;
+    }
+
+    setLocalLoading(true);
+    try {
+      const response = await authService.forgotPassword(email);
+      if (response.success) {
+        setSuccessMessage('A 6-digit verification code has been sent to your email.');
+        setAuthMode('reset_password_otp');
+        setOtp('');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        setValidationError(response.message || 'Failed to send reset code.');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to send reset code.';
+      setValidationError(msg);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setValidationError('');
+    setSuccessMessage('');
+
+    if (!otp || !password || !confirmPassword) {
+      setValidationError('Please fill in all fields.');
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setValidationError('Verification code must be 6 digits.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setValidationError('Passwords do not match.');
+      return;
+    }
+
+    setLocalLoading(true);
+    try {
+      const response = await authService.resetPassword(email, otp, password);
+      if (response.success) {
+        setSuccessMessage('Password reset successfully! You can now login.');
+        setAuthMode('email_login');
+        setPassword('');
+        setConfirmPassword('');
+      } else {
+        setValidationError(response.message || 'Failed to reset password.');
+      }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to reset password.';
+      setValidationError(msg);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -323,6 +398,14 @@ export default function QuickLoginModal() {
                     </div>
                   )}
 
+                  {/* Form Success Banner */}
+                  {successMessage && (
+                    <div className="p-3.5 bg-green-50 border border-green-100 text-green-600 rounded-xl flex items-start space-x-2 text-xs font-semibold">
+                      <CheckCircle2 className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+                      <span>{successMessage}</span>
+                    </div>
+                  )}
+
                   <form onSubmit={handleEmailAuth} className="space-y-5 text-left">
                     {/* Email Field */}
                     <div className="space-y-1.5">
@@ -344,9 +427,17 @@ export default function QuickLoginModal() {
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center">
                         <label className="text-xs font-bold text-slate-700">Password</label>
-                        <Link to="/forgot-password" onClick={handleClose} className="text-xs font-bold text-primary-dark hover:underline">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setAuthMode('forgot_password');
+                            setValidationError('');
+                            setSuccessMessage('');
+                          }} 
+                          className="text-xs font-bold text-primary-dark hover:underline bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
+                        >
                           Forgot Password?
-                        </Link>
+                        </button>
                       </div>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
@@ -416,6 +507,192 @@ export default function QuickLoginModal() {
                         Register Now
                       </button>
                     </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* FORGOT PASSWORD MODE */}
+              {authMode === 'forgot_password' && (
+                <motion.div
+                  key="forgot_password"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2 text-left">
+                    <h2 className="text-3xl font-black tracking-tight text-[#0F172A]">Reset Password</h2>
+                    <p className="text-sm text-slate-500 font-medium">Enter your registered email address to receive a 6-digit verification code.</p>
+                  </div>
+
+                  {/* Form Error Banner */}
+                  {validationError && (
+                    <div className="p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-start space-x-2 text-xs font-semibold">
+                      <AlertCircle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+                      <span>{validationError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleForgotPassword} className="space-y-5 text-left">
+                    {/* Email Field */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700">Email Address</label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                        <input 
+                          type="email"
+                          placeholder="name@example.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="w-full pl-11 pr-4 py-3.5 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Send code button */}
+                    <button 
+                      type="submit"
+                      disabled={localLoading}
+                      className="w-full py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-2xl text-sm flex items-center justify-center space-x-2 transition-all shadow-[0_4px_20px_rgba(170,238,0,0.2)] disabled:opacity-50 focus:outline-none"
+                    >
+                      <span>{localLoading ? 'Sending Code...' : 'Send Reset Code'}</span>
+                      {!localLoading && <ArrowRight className="w-4.5 h-4.5" />}
+                    </button>
+                  </form>
+
+                  {/* Back to Login link */}
+                  <div className="text-center pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setAuthMode('email_login');
+                        setValidationError('');
+                        setSuccessMessage('');
+                      }} 
+                      className="text-xs font-bold text-slate-500 hover:underline hover:text-slate-800 bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
+                    >
+                      ← Back to Login
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* RESET PASSWORD OTP MODE */}
+              {authMode === 'reset_password_otp' && (
+                <motion.div
+                  key="reset_password_otp"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="space-y-6"
+                >
+                  <div className="space-y-2 text-left">
+                    <h2 className="text-3xl font-black tracking-tight text-[#0F172A]">Verify Code</h2>
+                    <p className="text-sm text-slate-500 font-medium">Enter the 6-digit verification code sent to your email and set your new password.</p>
+                  </div>
+
+                  {/* Form Error Banner */}
+                  {validationError && (
+                    <div className="p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-start space-x-2 text-xs font-semibold">
+                      <AlertCircle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+                      <span>{validationError}</span>
+                    </div>
+                  )}
+
+                  {/* Form Success Banner */}
+                  {successMessage && (
+                    <div className="p-3.5 bg-green-50 border border-green-100 text-green-600 rounded-xl flex items-start space-x-2 text-xs font-semibold">
+                      <CheckCircle2 className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+                      <span>{successMessage}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleResetPassword} className="space-y-4 text-left">
+                    {/* Verification Code */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-slate-700">6-Digit Verification Code</label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                        <input 
+                          type="text"
+                          maxLength={6}
+                          placeholder="e.g. 123456"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                          className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400 tracking-[0.2em] text-center font-bold text-lg focus:tracking-[0.2em]"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Passwords grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Password */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700">New Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                          <input 
+                            type="password"
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      {/* Confirm Password */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700">Confirm Password</label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
+                          <input 
+                            type="password"
+                            placeholder="••••••••"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border-0 focus:ring-2 focus:ring-primary/20 rounded-2xl text-sm font-medium focus:outline-none text-slate-800 placeholder-slate-400"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reset button */}
+                    <button 
+                      type="submit"
+                      disabled={localLoading}
+                      className="w-full py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-2xl text-sm flex items-center justify-center space-x-2 transition-all shadow-[0_4px_20px_rgba(170,238,0,0.2)] disabled:opacity-50 focus:outline-none mt-2"
+                    >
+                      <span>{localLoading ? 'Resetting Password...' : 'Reset Password'}</span>
+                      {!localLoading && <ArrowRight className="w-4.5 h-4.5" />}
+                    </button>
+                  </form>
+
+                  {/* Resend and Back to Login links */}
+                  <div className="flex justify-between items-center pt-2">
+                    <button 
+                      type="button" 
+                      onClick={handleForgotPassword}
+                      disabled={localLoading}
+                      className="text-xs font-bold text-primary-dark hover:underline bg-transparent border-0 cursor-pointer p-0 disabled:opacity-50 focus:outline-none"
+                    >
+                      Resend Code
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setAuthMode('email_login');
+                        setValidationError('');
+                        setSuccessMessage('');
+                      }} 
+                      className="text-xs font-bold text-slate-500 hover:underline hover:text-slate-800 bg-transparent border-0 cursor-pointer p-0 focus:outline-none"
+                    >
+                      Back to Login
+                    </button>
                   </div>
                 </motion.div>
               )}

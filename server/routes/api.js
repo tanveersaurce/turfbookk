@@ -84,7 +84,7 @@ router.post('/auth/register', authLimiter, register);
 router.post('/auth/login', authLimiter, login);
 router.post('/auth/logout', protect, logout);
 router.post('/auth/forgot-password', authLimiter, forgotPassword);
-router.post('/auth/reset-password/:token', authLimiter, resetPassword);
+router.post('/auth/reset-password', authLimiter, resetPassword);
 router.get('/auth/me', protect, getMe);
 
 // ==========================================
