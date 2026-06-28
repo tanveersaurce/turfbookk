@@ -197,6 +197,9 @@ export const forgotPassword = async (req, res, next) => {
     user.resetPasswordOTPExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
+    // Dev fallback: Print verification OTP code directly to server console
+    console.log(`\n🔑 [DEV ONLY] Password reset code for ${user.email} is: ${otp}\n`);
+
     // Send password reset OTP email
     try {
       await sendEmail({
