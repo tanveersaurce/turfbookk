@@ -40,7 +40,7 @@ app.use(helmet({
 
 // CORS Configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: process.env.CLIENT_URL || 'https://turfbookk.vercel.app',
   credentials: true, // Allow cookies to be sent along with API calls
 }));
 
