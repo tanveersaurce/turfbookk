@@ -105,25 +105,6 @@ turfbook/
    RAZORPAY_KEY_SECRET=your_razorpay_key_secret
    ```
 
-3. **Seed Default Database Data**:
-   Navigate to the `server/` directory and run the seeder:
-   ```bash
-   cd server
-   node seed.js
-   ```
-   *This seeds mock users, admins, turfs, and availability slots for testing.*
-   
-   **Default Login Accounts:**
-   * **Admin User**: `admin@turfbook.com` / `Admin@123`
-<<<<<<< HEAD
-   * **Owner User**: `rahul@owner.com` / `  `
-=======
-   * **Owner User**: `rahul@owner.com` / `Owner@123`
->>>>>>> 2f0a177e57ef9730224c412cf58f241a1c9f170b
-   * **Regular User**: `kabir@gmail.com` / `User@123`
-
----
-
 ## 🏃 Running the Application
 
 To run both client and server concurrently from the root folder:
