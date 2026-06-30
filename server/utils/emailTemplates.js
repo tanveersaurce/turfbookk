@@ -36,7 +36,7 @@ export const welcomeEmail = (user) => {
               <li>Book instantly and enjoy the match!</li>
             </ul>
             <div class="btn-container">
-              <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}" class="btn">Browse Turfs</a>
+              <a href="${process.env.CLIENT_URL || 'https://turfbookk.vercel.app'}" class="btn">Browse Turfs</a>
             </div>
           </div>
           <div class="footer">
