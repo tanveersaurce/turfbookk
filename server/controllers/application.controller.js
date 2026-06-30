@@ -298,7 +298,7 @@ export const approveApplication = async (req, res, next) => {
     }
 
     // D) Generate Slots
-    await generateWeekSlots(newTurf);
+    await generateWeekSlots(newTurf, new Date(), 7, session);
 
     // E) Update application
     application.status = 'approved';
@@ -354,8 +354,10 @@ export const approveApplication = async (req, res, next) => {
       }
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
 
     const isValidationError = 
       error.message === 'Application not found.' ||

@@ -57,7 +57,7 @@ export const generateDailySlots = (openTime = '06:00', closeTime = '23:00', slot
  * @param {Date} startDate - Starting date
  * @param {Number} days - Number of days to generate (default 7)
  */
-export const generateWeekSlots = async (turf, startDate = new Date(), days = 7) => {
+export const generateWeekSlots = async (turf, startDate = new Date(), days = 7, session = null) => {
   const updatedSlots = [...(turf.slots || [])];
   
   for (let i = 0; i < days; i++) {
@@ -86,9 +86,11 @@ export const generateWeekSlots = async (turf, startDate = new Date(), days = 7) 
   }
 
   // Update in DB
+  const updateOptions = session ? { session } : {};
   await Turf.updateOne(
     { _id: turf._id },
-    { $set: { slots: updatedSlots } }
+    { $set: { slots: updatedSlots } },
+    updateOptions
   );
 
   return updatedSlots;
