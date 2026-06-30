@@ -2,7 +2,9 @@ import axios from 'axios';
 
 // Create Axios Instance
 const api = axios.create({
-  baseURL: 'https://turfbookk-production.up.railway.app/api',
+  baseURL: import.meta.env.DEV 
+    ? 'http://localhost:5001/api' 
+    : 'https://turfbookk-production.up.railway.app/api',
   withCredentials: true, // Crucial: enables sending and receiving cookies (HTTP-only JWT)
   headers: {
     'Content-Type': 'application/json',
