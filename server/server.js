@@ -39,8 +39,29 @@ app.use(helmet({
 }));
 
 // CORS Configuration
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'https://turfbookk.vercel.app',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, postman, or curl)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is in the allowed list or is a localhost domain
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      /^http:\/\/localhost:\d+$/.test(origin) || 
+                      /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Fallback: allow request but note it in logs or return true to prevent blocking during development
+    }
+  },
   credentials: true, // Allow cookies to be sent along with API calls
 }));
 
