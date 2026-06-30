@@ -306,9 +306,9 @@ export const approveApplication = async (req, res, next) => {
     application.createdTurfId = newTurf._id;
     await application.save(queryOptions);
 
-    // F) Send approval email
+    // F) Send approval email (Background process to prevent blocking/hanging)
     const ownerPanelUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/owner/dashboard`;
-    await sendEmail({
+    sendEmail({
       to: application.email,
       subject: "Congratulations! You're a Partner",
       html: applicationApprovedEmail(
@@ -318,7 +318,7 @@ export const approveApplication = async (req, res, next) => {
         password,
         ownerPanelUrl
       )
-    });
+    }).catch(err => console.error('Error sending approval email:', err));
 
     // G) Create Notification
     await Notification.create([{
