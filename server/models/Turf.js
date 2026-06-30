@@ -29,6 +29,11 @@ const turfSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  mapsLink: {
+    type: String,
+    required: true,
+    trim: true,
+  },
   location: {
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },

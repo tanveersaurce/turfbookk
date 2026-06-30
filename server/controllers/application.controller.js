@@ -278,6 +278,7 @@ export const approveApplication = async (req, res, next) => {
         address: application.turfAddress,
         city: application.city,
         area: application.area,
+        mapsLink: application.mapsLink,
         location: {
           lat: 28.6139,
           lng: 77.2090

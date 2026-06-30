@@ -18,6 +18,7 @@ export default function Step3TurfDetails({ formData, setFormData, onNext, onBack
     if (!formData.turfName.trim()) tempErrors.turfName = 'Turf Name is required.';
     if (!formData.turfAddress.trim()) tempErrors.turfAddress = 'Turf Address is required.';
     if (!formData.area.trim()) tempErrors.area = 'Area / Locality is required.';
+    if (!formData.mapsLink.trim()) tempErrors.mapsLink = 'Google Maps Link is required.';
     
     if (!formData.operatingHours.open) tempErrors.openTime = 'Open time is required.';
     if (!formData.operatingHours.close) tempErrors.closeTime = 'Close time is required.';
@@ -107,7 +108,7 @@ export default function Step3TurfDetails({ formData, setFormData, onNext, onBack
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-bold text-slate-700">Google Maps Link (Optional)</label>
+          <label className="text-xs font-bold text-slate-700">Google Maps Link</label>
           <div className="relative">
             <Map className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
             <input 
@@ -115,9 +116,12 @@ export default function Step3TurfDetails({ formData, setFormData, onNext, onBack
               placeholder="https://maps.app.goo.gl/..."
               value={formData.mapsLink}
               onChange={(e) => setFormData({ ...formData, mapsLink: e.target.value })}
-              className="w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border border-slate-200/60 rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#AAEE00]/30 text-slate-800"
+              className={`w-full pl-11 pr-4 py-3 bg-[#F1F5F9] border rounded-2xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#AAEE00]/30 text-slate-800 ${
+                errors.mapsLink ? 'border-red-500' : 'border-slate-200/60'
+              }`}
             />
           </div>
+          {errors.mapsLink && <p className="text-[10px] text-red-500 font-bold">{errors.mapsLink}</p>}
         </div>
       </div>
 

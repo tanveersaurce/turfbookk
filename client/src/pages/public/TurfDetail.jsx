@@ -383,7 +383,7 @@ export default function TurfDetail() {
                     <span className="font-semibold">{turf.address}, {turf.city}</span>
                     <span className="text-slate-300">|</span>
                     <a 
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(turf.name + ' ' + turf.address)}`} 
+                      href={turf.mapsLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(turf.name + ' ' + turf.address)}`} 
                       target="_blank" 
                       rel="noopener noreferrer" 
                       className="text-[#AAEE00] font-bold hover:underline"
@@ -620,8 +620,36 @@ export default function TurfDetail() {
               </div>
             </div>
 
-            {/* Dummy map target */}
-            <div id="location" className="scroll-mt-24 pt-2"></div>
+            {/* Location & Directions Section */}
+            <div id="location" className="scroll-mt-24 pt-6 space-y-6">
+              <h3 className="text-[18px] font-black text-[#1A1A1A]">Location & Directions</h3>
+              <div className="p-8 bg-white border border-slate-100 rounded-3xl shadow-sm text-left space-y-6 hover:shadow-md transition-shadow duration-200">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 rounded-full bg-[#AAEE00]/15 flex items-center justify-center text-[#AAEE00] flex-shrink-0">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-black text-[#1A1A1A]">Turf Address</h4>
+                    <p className="text-xs text-slate-500 font-semibold leading-normal">{turf.address}, {turf.city}</p>
+                    {turf.area && <p className="text-[11px] text-slate-400 font-bold">{turf.area}</p>}
+                  </div>
+                </div>
+                
+                {turf.mapsLink && (
+                  <div className="pt-2">
+                    <a 
+                      href={turf.mapsLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-2 px-6 py-3.5 bg-[#1A1A1A] hover:bg-[#AAEE00] hover:text-[#1A1A1A] text-white text-xs font-extrabold rounded-2xl transition-all shadow-md group"
+                    >
+                      <MapPin className="w-4 h-4 text-[#AAEE00] group-hover:text-[#1A1A1A] transition-colors" />
+                      <span>Open in Google Maps</span>
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
 
           </div>
 

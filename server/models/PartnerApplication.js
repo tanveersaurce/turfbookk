@@ -55,7 +55,7 @@ const partnerApplicationSchema = new mongoose.Schema({
   },
   mapsLink: {
     type: String,
-    default: '',
+    required: true,
   },
   operatingHours: {
     open: {
