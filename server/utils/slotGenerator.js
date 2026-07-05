@@ -16,7 +16,7 @@ const timeToMinutes = (timeStr) => {
  * @returns {String}
  */
 const minutesToTime = (totalMinutes) => {
-  const hours = Math.floor(totalMinutes / 60);
+  const hours = Math.floor(totalMinutes / 60) % 24;
   const minutes = totalMinutes % 60;
   const hStr = hours.toString().padStart(2, '0');
   const mStr = minutes.toString().padStart(2, '0');
@@ -33,7 +33,12 @@ const minutesToTime = (totalMinutes) => {
 export const generateDailySlots = (openTime = '06:00', closeTime = '23:00', slotDuration = 60) => {
   const slots = [];
   const startMin = timeToMinutes(openTime);
-  const endMin = timeToMinutes(closeTime);
+  let endMin = timeToMinutes(closeTime);
+
+  // If closing time is on the next day (crosses midnight)
+  if (endMin <= startMin) {
+    endMin += 1440; // Add 24 hours in minutes
+  }
 
   let currentMin = startMin;
   while (currentMin + slotDuration <= endMin) {
