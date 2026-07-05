@@ -49,7 +49,12 @@ export default function TurfDetail() {
     for (let i = 0; i < 5; i++) {
       const d = new Date();
       d.setDate(d.getDate() + i);
-      const dateString = d.toISOString().split('T')[0]; // YYYY-MM-DD
+      
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const dateVal = String(d.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${dateVal}`; // local YYYY-MM-DD
+      
       days.push({
         dateString,
         dayNum: d.getDate(),

@@ -33,7 +33,9 @@ export default function BookingsTable({ bookings = [], title = 'Real-time Bookin
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
-    link.setAttribute('download', `bookings_report_${new Date().toISOString().split('T')[0]}.csv`);
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    link.setAttribute('download', `bookings_report_${dateStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

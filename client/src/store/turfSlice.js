@@ -1,10 +1,18 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const date = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${date}`;
+};
+
 const initialState = {
   searchParams: {
     city: localStorage.getItem('tb_selected_city') || 'Bhopal',
     sport: 'Football',
-    date: new Date().toISOString().split('T')[0],
+    date: getLocalDateString(),
   },
   turfs: [],
   selectedTurf: null,

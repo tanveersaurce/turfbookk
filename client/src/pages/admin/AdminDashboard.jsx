@@ -91,10 +91,16 @@ export default function AdminDashboard() {
 
   const handleCreateAd = async (adData) => {
     try {
+      const getLocalDateString = (d = new Date()) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const dateVal = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dateVal}`;
+      };
       await adminService.createAd({
         ...adData,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        startDate: getLocalDateString(),
+        endDate: getLocalDateString(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
       });
       fetchAdminData();
       return true;

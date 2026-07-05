@@ -27,10 +27,18 @@ export default function Home() {
     }
   }, [hash]);
 
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const date = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${date}`;
+  };
+
   const { searchParams } = useSelector((state) => state.turf);
   const [city, setCity] = useState(searchParams.city || 'Bhopal');
   const [sport, setSport] = useState('Football');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(getLocalDateString());
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeAd, setActiveAd] = useState(null);
@@ -222,7 +230,7 @@ export default function Home() {
                     <Calendar className="w-4 h-4 text-slate-400" />
                     <input 
                       type="date"
-                      min={new Date().toISOString().split('T')[0]}
+                      min={getLocalDateString()}
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       className="bg-transparent text-xs text-slate-800 focus:outline-none w-full font-bold cursor-pointer"

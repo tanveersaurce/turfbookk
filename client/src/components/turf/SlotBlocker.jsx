@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { ShieldAlert, Check, AlertCircle } from 'lucide-react';
 
 export default function SlotBlocker({ onBlock }) {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const getLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const dateVal = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dateVal}`;
+  };
+
+  const [date, setDate] = useState(getLocalDateString());
   const [startTime, setStartTime] = useState('14:00');
   const [endTime, setEndTime] = useState('16:00');
   const [reason, setReason] = useState('Routine Maintenance');
@@ -68,7 +76,7 @@ export default function SlotBlocker({ onBlock }) {
           <label className="block text-xs font-semibold text-muted mb-1.5 uppercase tracking-wider">Date</label>
           <input
             type="date"
-            min={new Date().toISOString().split('T')[0]}
+            min={getLocalDateString()}
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="w-full px-3 py-2.5 bg-[#0D1117] border border-white/10 rounded-xl text-xs focus:outline-none focus:border-primary text-white"

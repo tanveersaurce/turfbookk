@@ -407,7 +407,8 @@ export const ownerService = {
     const confirmedPaidBookings = bookings.filter(b => b.status === 'confirmed' || b.paymentStatus === 'paid');
     const totalRevenue = confirmedPaidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
     
-    const todayStr = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const todayBookings = bookings.filter(b => b.date === todayStr).length;
 
     const activeTurfs = turfs.filter(t => t.isActive).length;

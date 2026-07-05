@@ -28,6 +28,7 @@ const getCityRegion = (cityName) => {
 };
 
 const sportsList = [
+  { name: 'All', emoji: '🌟' },
   { name: 'Football', emoji: '⚽' },
   { name: 'Cricket', emoji: '🏏' },
   { name: 'Box Cricket', emoji: '🎯' },
@@ -41,9 +42,9 @@ export default function Search() {
   const dispatch = useDispatch();
   const reduxCity = useSelector((state) => state.turf.searchParams.city);
   
-  // URL Param Sync
-  const [city, setCity] = useState(urlParams.get('city') || reduxCity || 'Bhopal');
-  const [sport, setSport] = useState(urlParams.get('sport') || 'Football');
+  // Deriving active values from URL or Redux (no local state for city/sport to avoid render loops)
+  const city = urlParams.get('city') || reduxCity || 'Bhopal';
+  const sport = urlParams.get('sport') || 'All';
   
   // Sidebar Filters local states
   const [minPrice] = useState(200);
@@ -51,7 +52,7 @@ export default function Search() {
   const [selectedRating, setSelectedRating] = useState(0); // default Any rating
   const [amenities, setAmenities] = useState({
     parking: false,
-    floodlights: false, // default unchecked to avoid hiding new turfs
+    floodlights: false,
     washroom: false,
     cafeteria: false
   });
@@ -65,18 +66,15 @@ export default function Search() {
   const [turfs, setTurfs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Sync state if URL params change (e.g. city clicked from Home)
-  useEffect(() => {
-    const urlCity = urlParams.get('city');
-    const urlSport = urlParams.get('sport');
-    if (urlCity) {
-      setCity(urlCity);
-      dispatch(setSelectedCity(urlCity));
-    } else if (reduxCity) {
-      setCity(reduxCity);
-    }
-    if (urlSport) setSport(urlSport);
-  }, [urlParams, reduxCity]);
+  // Helper functions to handle changes
+  const handleCityChange = (newCity) => {
+    setUrlParams({ city: newCity, sport }, { replace: true });
+    dispatch(setSelectedCity(newCity));
+  };
+
+  const handleSportChange = (newSport) => {
+    setUrlParams({ city, sport: newSport }, { replace: true });
+  };
 
   useEffect(() => {
     const fetchFilteredTurfs = async () => {
@@ -84,7 +82,7 @@ export default function Search() {
       try {
         const queryParams = {
           city,
-          sport: sport !== 'Multi-Sport' ? sport : undefined
+          sport: (sport && sport !== 'All' && sport !== 'Multi-Sport') ? sport : undefined
         };
         const data = await turfService.getTurfs(queryParams);
         setTurfs(data.data || []);
@@ -96,9 +94,10 @@ export default function Search() {
     };
     fetchFilteredTurfs();
     
-    // Sync back to URL and Redux
-    setUrlParams({ city, sport }, { replace: true });
-    dispatch(setSelectedCity(city));
+    // Sync back to Redux
+    if (reduxCity !== city) {
+      dispatch(setSelectedCity(city));
+    }
   }, [city, sport]);
 
   const toggleAmenity = (name) => {
@@ -122,7 +121,7 @@ export default function Search() {
   const filteredTurfs = turfs
     .filter(t => {
       // 1. Sport check (ensure sport matches)
-      if (sport && !t.sports?.some(s => s.toLowerCase() === sport.toLowerCase())) {
+      if (sport && sport !== 'All' && !t.sports?.some(s => s.toLowerCase() === sport.toLowerCase())) {
         return false;
       }
 
@@ -188,7 +187,7 @@ export default function Search() {
                 <button
                   key={s.name}
                   type="button"
-                  onClick={() => setSport(s.name)}
+                  onClick={() => handleSportChange(s.name)}
                   className={`flex-shrink-0 px-4 py-2.5 rounded-full text-xs font-extrabold flex items-center space-x-1.5 transition-all focus:outline-none ${
                     isActive 
                       ? 'bg-primary text-black shadow-md shadow-primary/10' 
@@ -314,7 +313,7 @@ export default function Search() {
               <label className="block text-xs text-slate-500 font-bold uppercase tracking-wider">Location</label>
               <SearchableCityDropdown 
                 onChange={(c) => {
-                  setCity(c);
+                  handleCityChange(c);
                 }} 
               />
             </div>
@@ -330,7 +329,7 @@ export default function Search() {
                     <input
                       type="checkbox"
                       checked={sport.toLowerCase() === s.name.toLowerCase()}
-                      onChange={() => setSport(s.name)}
+                      onChange={() => handleSportChange(s.name)}
                       className="rounded border-slate-300 text-primary bg-slate-50 focus:ring-primary w-4 h-4 accent-primary"
                     />
                     <span>{s.name} {s.emoji}</span>
@@ -378,7 +377,7 @@ export default function Search() {
                     <button
                       key={val}
                       type="button"
-                      onClick={() => setSelectedRating(val)}
+                      onClick={() => setSelectedRating(selectedRating === val ? 0 : val)}
                       className={`py-2.5 border rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center space-y-0.5 focus:outline-none ${
                         isActive 
                           ? 'bg-primary border-primary text-black shadow-sm' 
@@ -423,6 +422,9 @@ export default function Search() {
             {/* Apply filters button */}
             <button
               type="button"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
               className="w-full py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-2xl text-xs uppercase tracking-wider transition-all focus:outline-none shadow-sm shadow-primary/10"
             >
               Apply Filters
