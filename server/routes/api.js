@@ -37,6 +37,8 @@ import {
   checkSlotsAvailability,
   uploadTurfImages,
   blockSlot,
+  updateSlotsStatus,
+  copyDaySchedule,
   getDistinctCities,
 } from '../controllers/turf.controller.js';
 
@@ -114,6 +116,8 @@ router.delete('/turfs/:id', protect, authorizeRoles('owner', 'admin'), deleteTur
 router.get('/turfs/owner/my-turfs', protect, authorizeRoles('owner'), getMyTurfs);
 router.post('/turfs/:id/images', protect, authorizeRoles('owner'), uploadMultiple('images', 5), uploadTurfImages);
 router.post('/turfs/:id/block-slot', protect, authorizeRoles('owner'), blockSlot);
+router.post('/turfs/:id/slots/bulk-update', protect, authorizeRoles('owner'), updateSlotsStatus);
+router.post('/turfs/:id/slots/copy-day', protect, authorizeRoles('owner'), copyDaySchedule);
 
 // ==========================================
 // 4. BOOKING ROUTES

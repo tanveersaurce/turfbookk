@@ -336,14 +336,17 @@ export const blockSlot = async (req, res, next) => {
     // Add to blockedSlots array
     turf.blockedSlots.push({ date, startTime, endTime, reason });
 
-    // Mark matched slots as booked in the slots array
+    // Mark matched slots as blocked in the slots array
     for (const slot of turf.slots) {
       if (
         slot.date === date &&
         slot.startTime >= startTime &&
         slot.endTime <= endTime
       ) {
-        slot.isBooked = true;
+        if (!slot.isBooked) {
+          slot.isBlocked = true;
+          slot.blockedReason = reason || 'Blocked by Owner';
+        }
       }
     }
 
@@ -351,6 +354,210 @@ export const blockSlot = async (req, res, next) => {
 
     res.status(200).json({ success: true, message: 'Slots blocked successfully.', data: turf });
   } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Bulk Update Slots Status (Block/Unblock)
+// @route   POST /api/turfs/:id/slots/bulk-update
+// @access  Private (Owner/Admin)
+export const updateSlotsStatus = async (req, res, next) => {
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
+  if (useTransaction && session) {
+    session.startTransaction();
+  }
+
+  try {
+    const { id } = req.params;
+    const { date, slots, action, reason } = req.body; // slots: ["09:00-10:00", "10:00-11:00"]
+
+    if (!date || !slots || !action) {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(400).json({ success: false, message: 'Please provide date, slots, and action.' });
+    }
+
+    const turf = useTransaction
+      ? await Turf.findById(id).session(session)
+      : await Turf.findById(id);
+
+    if (!turf) {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(404).json({ success: false, message: 'Turf not found.' });
+    }
+
+    // Ensure user owns this turf or is admin
+    if (turf.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(403).json({ success: false, message: 'Not authorized to manage slots.' });
+    }
+
+    // Process each target slot time range
+    for (const slotRange of slots) {
+      const [start, end] = slotRange.split('-');
+      
+      const matchedSlot = turf.slots.find(
+        (s) => s.date === date && s.startTime === start && s.endTime === end
+      );
+
+      if (matchedSlot) {
+        if (action === 'block') {
+          // Concurrency safety check
+          if (matchedSlot.isBooked) {
+            continue;
+          }
+          matchedSlot.isBlocked = true;
+          matchedSlot.blockedReason = reason || 'Blocked by Owner';
+
+          // Add to blockedSlots array
+          const alreadyInBlockedList = turf.blockedSlots.some(
+            (bs) => bs.date === date && bs.startTime === start && bs.endTime === end
+          );
+          if (!alreadyInBlockedList) {
+            turf.blockedSlots.push({ date, startTime: start, endTime: end, reason: reason || 'Blocked by Owner' });
+          }
+        } else if (action === 'unblock') {
+          matchedSlot.isBlocked = false;
+          matchedSlot.blockedReason = '';
+
+          // Remove from blockedSlots
+          turf.blockedSlots = turf.blockedSlots.filter(
+            (bs) => !(bs.date === date && bs.startTime === start && bs.endTime === end)
+          );
+        }
+      }
+    }
+
+    await turf.save(useTransaction ? { session } : {});
+
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
+
+    res.status(200).json({ success: true, message: `Slots ${action}ed successfully.`, data: turf });
+  } catch (error) {
+    if (useTransaction && session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
+    next(error);
+  }
+};
+
+// @desc    Copy Day Schedule
+// @route   POST /api/turfs/:id/slots/copy-day
+// @access  Private (Owner/Admin)
+export const copyDaySchedule = async (req, res, next) => {
+  const useTransaction = global.supportsTransactions !== false;
+  const session = useTransaction ? await mongoose.startSession() : null;
+  if (useTransaction && session) {
+    session.startTransaction();
+  }
+
+  try {
+    const { id } = req.params;
+    const { sourceDate, targetDate } = req.body;
+
+    if (!sourceDate || !targetDate) {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(400).json({ success: false, message: 'Please provide sourceDate and targetDate.' });
+    }
+
+    const turf = useTransaction
+      ? await Turf.findById(id).session(session)
+      : await Turf.findById(id);
+
+    if (!turf) {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(404).json({ success: false, message: 'Turf not found.' });
+    }
+
+    // Ensure user owns this turf or is admin
+    if (turf.owner.toString() !== req.user.id && req.user.role !== 'admin') {
+      if (useTransaction && session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
+      return res.status(403).json({ success: false, message: 'Not authorized to copy schedule.' });
+    }
+
+    // Ensure source slots exist
+    let sourceSlots = turf.slots.filter((s) => s.date === sourceDate);
+    if (sourceSlots.length === 0) {
+      const allSlots = await generateWeekSlots(turf, new Date(sourceDate), 1, session);
+      sourceSlots = allSlots.filter((s) => s.date === sourceDate);
+    }
+
+    // Ensure target slots exist
+    let targetSlots = turf.slots.filter((s) => s.date === targetDate);
+    if (targetSlots.length === 0) {
+      const allSlots = await generateWeekSlots(turf, new Date(targetDate), 1, session);
+      targetSlots = allSlots.filter((s) => s.date === targetDate);
+    }
+
+    // Copy schedule
+    for (const sourceSlot of sourceSlots) {
+      const targetSlot = turf.slots.find(
+        (s) => s.date === targetDate && s.startTime === sourceSlot.startTime && s.endTime === sourceSlot.endTime
+      );
+
+      if (targetSlot) {
+        if (targetSlot.isBooked) {
+          continue; // Concurrency check: Skip already-booked slots
+        }
+
+        targetSlot.isBlocked = sourceSlot.isBlocked;
+        targetSlot.blockedReason = sourceSlot.blockedReason || '';
+
+        if (sourceSlot.isBlocked) {
+          const alreadyInBlockedList = turf.blockedSlots.some(
+            (bs) => bs.date === targetDate && bs.startTime === sourceSlot.startTime && bs.endTime === sourceSlot.endTime
+          );
+          if (!alreadyInBlockedList) {
+            turf.blockedSlots.push({
+              date: targetDate,
+              startTime: sourceSlot.startTime,
+              endTime: sourceSlot.endTime,
+              reason: sourceSlot.blockedReason || 'Blocked (Copied)'
+            });
+          }
+        } else {
+          turf.blockedSlots = turf.blockedSlots.filter(
+            (bs) => !(bs.date === targetDate && bs.startTime === sourceSlot.startTime && bs.endTime === sourceSlot.endTime)
+          );
+        }
+      }
+    }
+
+    await turf.save(useTransaction ? { session } : {});
+
+    if (useTransaction && session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
+
+    res.status(200).json({ success: true, message: 'Schedule copied successfully.', data: turf });
+  } catch (error) {
+    if (useTransaction && session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     next(error);
   }
 };

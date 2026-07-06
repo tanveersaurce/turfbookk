@@ -799,7 +799,7 @@ export default function TurfDetail() {
                       const slotStr = `${slot.startTime} - ${slot.endTime}`;
                       const isSelected = selectedSlots.includes(slotStr);
                       const isLocked = isSlotSocketLocked(slot);
-                      const isBooked = slot.isBooked || realtimeBookedSlots.includes(`${slot.startTime}-${slot.endTime}`);
+                      const isBooked = slot.isBooked || slot.isBlocked || realtimeBookedSlots.includes(`${slot.startTime}-${slot.endTime}`);
 
                       let classes = "py-2.5 rounded-xl text-[10px] font-extrabold text-center transition-all border focus:outline-none ";
                       

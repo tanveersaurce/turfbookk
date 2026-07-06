@@ -159,6 +159,14 @@ export const turfService = {
     const res = await api.post(`/turfs/${id}/block-slot`, blockData);
     return res.data;
   },
+  bulkUpdateSlots: async (id, data) => {
+    const res = await api.post(`/turfs/${id}/slots/bulk-update`, data);
+    return res.data;
+  },
+  copyDaySchedule: async (id, data) => {
+    const res = await api.post(`/turfs/${id}/slots/copy-day`, data);
+    return res.data;
+  },
 };
 
 

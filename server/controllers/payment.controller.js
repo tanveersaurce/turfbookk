@@ -134,8 +134,8 @@ export const verifyPayment = async (req, res, next) => {
         slot.endTime <= booking.endTime
     );
 
-    const alreadyBooked = bookingSlots.some((slot) => slot.isBooked);
-    if (alreadyBooked) {
+    const alreadyBookedOrBlocked = bookingSlots.some((slot) => slot.isBooked || slot.isBlocked);
+    if (alreadyBookedOrBlocked) {
       // Refund would be initiated in a real-world app, here we cancel and fail transaction
       booking.status = 'cancelled';
       booking.paymentStatus = 'refunded';
@@ -145,7 +145,7 @@ export const verifyPayment = async (req, res, next) => {
         await session.commitTransaction();
         session.endSession();
       }
-      return res.status(400).json({ success: false, message: 'Slot already booked by another user. Refund will be initiated.' });
+      return res.status(400).json({ success: false, message: 'Slot already booked or blocked. Refund will be initiated.' });
     }
 
     // Update turf slots to isBooked: true

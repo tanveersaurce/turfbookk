@@ -106,6 +106,8 @@ const turfSchema = new mongoose.Schema({
     startTime: { type: String, required: true }, // Format: HH:MM
     endTime: { type: String, required: true }, // Format: HH:MM
     isBooked: { type: Boolean, default: false },
+    isBlocked: { type: Boolean, default: false },
+    blockedReason: { type: String, default: '' },
     bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   }],
   blockedSlots: [{

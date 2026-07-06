@@ -67,13 +67,13 @@ export const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Selected slots are not open or not generated yet.' });
     }
 
-    const isAnyBooked = turfSlots.some(slot => slot.isBooked);
-    if (isAnyBooked) {
+    const isAnyUnavailable = turfSlots.some(slot => slot.isBooked || slot.isBlocked);
+    if (isAnyUnavailable) {
       if (useTransaction && session) {
         await session.abortTransaction();
         session.endSession();
       }
-      return res.status(400).json({ success: false, message: 'One or more of the selected slots are already booked.' });
+      return res.status(400).json({ success: false, message: 'One or more of the selected slots are already booked or blocked.' });
     }
 
     // 3. Create Booking in Pending status (awaiting Razorpay Payment validation)
