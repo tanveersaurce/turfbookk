@@ -145,11 +145,7 @@ export default function OwnerDashboard() {
   const [weekdayPriceDraft, setWeekdayPriceDraft] = useState(1200);
   const [weekendPriceDraft, setWeekendPriceDraft] = useState(1500);
 
-  const hasUnsavedChanges = selectedTurfForManage && (
-    descriptionDraft !== selectedTurfForManage.description ||
-    visibilityDraft !== selectedTurfForManage.isActive ||
-    weekdayPriceDraft !== selectedTurfForManage.pricePerHour
-  );
+
 
   const cities = ['Bhopal', 'Indore', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai'];
 
@@ -1450,9 +1446,17 @@ export default function OwnerDashboard() {
                                 />
                                 <div className="flex justify-end">
                                   <button
-                                    onClick={() => {
-                                      setSelectedTurfForManage(prev => ({ ...prev, description: descriptionDraft }));
-                                      alert('Description updated! Save changes globally at the bottom bar.');
+                                    onClick={async () => {
+                                      try {
+                                        await turfService.update(selectedTurfForManage.id || selectedTurfForManage._id, {
+                                          description: descriptionDraft
+                                        });
+                                        setSelectedTurfForManage(prev => ({ ...prev, description: descriptionDraft }));
+                                        alert('Description updated successfully!');
+                                        fetchDashboardData();
+                                      } catch (err) {
+                                        alert('Failed to update description: ' + err.message);
+                                      }
                                     }}
                                     className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-sm"
                                   >
@@ -1574,7 +1578,19 @@ export default function OwnerDashboard() {
                                     </div>
                                     <button
                                       type="button"
-                                      onClick={() => setVisibilityDraft(!visibilityDraft)}
+                                      onClick={async () => {
+                                        const newVisibility = !visibilityDraft;
+                                        try {
+                                          await turfService.update(selectedTurfForManage.id || selectedTurfForManage._id, {
+                                            isActive: newVisibility
+                                          });
+                                          setVisibilityDraft(newVisibility);
+                                          alert(`Turf visibility updated to ${newVisibility ? 'Active' : 'Inactive'}.`);
+                                          fetchDashboardData();
+                                        } catch (err) {
+                                          alert('Failed to update visibility: ' + err.message);
+                                        }
+                                      }}
                                       className="focus:outline-none"
                                     >
                                       {visibilityDraft ? (
@@ -1584,32 +1600,6 @@ export default function OwnerDashboard() {
                                       )}
                                     </button>
                                   </div>
-
-                                  {/* Duplicate button */}
-                                  <button
-                                    onClick={async () => {
-                                      try {
-                                        const duplicateData = {
-                                          ...selectedTurfForManage,
-                                          name: `${selectedTurfForManage.name} (Copy)`,
-                                          isActive: false,
-                                          isApproved: false
-                                        };
-                                        delete duplicateData.id;
-                                        delete duplicateData._id;
-                                        await turfService.create(duplicateData, user.email);
-                                        alert('Turf duplicated successfully as Draft.');
-                                        fetchDashboardData();
-                                        setSelectedTurfForManage(null);
-                                      } catch (err) {
-                                        alert(err.message);
-                                      }
-                                    }}
-                                    className="w-full p-3.5 bg-slate-50 border border-slate-150 hover:bg-slate-100 text-slate-750 text-xs font-bold rounded-2xl flex items-center justify-between transition-all"
-                                  >
-                                    <span>Duplicate This Turf</span>
-                                    <ChevronRight className="w-4 h-4 text-slate-400" />
-                                  </button>
 
                                   {/* Promote listings */}
                                   <button
@@ -1621,7 +1611,20 @@ export default function OwnerDashboard() {
 
                                   {/* Deactivate button */}
                                   <button
-                                    onClick={() => setVisibilityDraft(false)}
+                                    onClick={async () => {
+                                      if (confirm('Are you sure you want to deactivate this turf? It will hide the arena from search listings.')) {
+                                        try {
+                                          await turfService.update(selectedTurfForManage.id || selectedTurfForManage._id, {
+                                            isActive: false
+                                          });
+                                          setVisibilityDraft(false);
+                                          alert('Turf deactivated successfully.');
+                                          fetchDashboardData();
+                                        } catch (err) {
+                                          alert('Failed to deactivate turf: ' + err.message);
+                                        }
+                                      }
+                                    }}
                                     className="w-full p-3.5 bg-white border border-red-200 text-red-500 text-xs font-bold rounded-2xl flex items-center justify-center space-x-1.5 transition-all hover:bg-red-50"
                                   >
                                     <span>🚫 Deactivate Turf</span>
@@ -1643,7 +1646,7 @@ export default function OwnerDashboard() {
                             <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Pricing Configuration</h3>
                             <div className="grid grid-cols-2 gap-4">
                               <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-650">Weekday Price (₹/hr)</label>
+                                <label className="text-xs font-bold text-slate-650">Price Per Hour (₹/hr)</label>
                                 <input
                                   type="number"
                                   value={weekdayPriceDraft}
@@ -1651,15 +1654,29 @@ export default function OwnerDashboard() {
                                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none"
                                 />
                               </div>
-                              <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-650">Weekend Price (₹/hr)</label>
-                                <input
-                                  type="number"
-                                  value={weekendPriceDraft}
-                                  onChange={(e) => setWeekendPriceDraft(Number(e.target.value))}
-                                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none"
-                                />
-                              </div>
+                            </div>
+                            <div className="flex justify-end pt-2">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await turfService.update(selectedTurfForManage.id || selectedTurfForManage._id, {
+                                      pricePerHour: Number(weekdayPriceDraft)
+                                    });
+                                    setSelectedTurfForManage(prev => ({
+                                      ...prev,
+                                      pricePerHour: Number(weekdayPriceDraft)
+                                    }));
+                                    alert('Pricing updated successfully!');
+                                    fetchDashboardData();
+                                  } catch (err) {
+                                    alert('Failed to update pricing: ' + err.message);
+                                  }
+                                }}
+                                className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-sm"
+                              >
+                                Save Pricing
+                              </button>
                             </div>
                           </motion.div>
                         )}
@@ -1820,60 +1837,7 @@ export default function OwnerDashboard() {
                         )}
                       </AnimatePresence>
 
-                      {/* Floating Save Changes Bar */}
-                      <AnimatePresence>
-                        {hasUnsavedChanges && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 100 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 100 }}
-                            className="fixed bottom-6 left-6 right-6 lg:left-80 z-50 bg-[#20242B] border border-white/5 px-6 py-4 rounded-2xl flex items-center justify-between text-white shadow-2xl"
-                          >
-                            <div className="flex items-center space-x-2.5">
-                              <span className="w-2.5 h-2.5 bg-[#AAEE00] rounded-full animate-ping"></span>
-                              <span className="text-xs font-black uppercase tracking-wider text-slate-350">You have unsaved changes</span>
-                            </div>
-                            <div className="flex items-center space-x-3.5">
-                              <button
-                                onClick={() => {
-                                  // Discard
-                                  setDescriptionDraft(selectedTurfForManage.description);
-                                  setVisibilityDraft(selectedTurfForManage.isActive);
-                                  setWeekdayPriceDraft(selectedTurfForManage.pricePerHour);
-                                  setWeekendPriceDraft((selectedTurfForManage.pricePerHour || 1200) + 200);
-                                }}
-                                className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
-                              >
-                                Discard
-                              </button>
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    await turfService.update(selectedTurfForManage.id, {
-                                      description: descriptionDraft,
-                                      isActive: visibilityDraft,
-                                      pricePerHour: Number(weekdayPriceDraft)
-                                    });
-                                    alert('Changes saved successfully!');
-                                    fetchDashboardData();
-                                    setSelectedTurfForManage(prev => ({
-                                      ...prev,
-                                      description: descriptionDraft,
-                                      isActive: visibilityDraft,
-                                      pricePerHour: Number(weekdayPriceDraft)
-                                    }));
-                                  } catch (err) {
-                                    alert('Failed to save changes: ' + err.message);
-                                  }
-                                }}
-                                className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-md shadow-[#AAEE00]/10"
-                              >
-                                Save Changes
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+
                     </div>
                   ) : (
                     // Show standard list of turfs if no selectedTurfForManage
