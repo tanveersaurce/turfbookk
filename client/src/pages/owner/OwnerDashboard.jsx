@@ -195,6 +195,13 @@ export default function OwnerDashboard() {
     loadSlots();
   }, [selectedTurfForSlots, selectedDate, activeTab]);
 
+  useEffect(() => {
+    const turfs = dashboardData?.turfs;
+    if (turfs && turfs.length > 0 && !selectedTurfForSlots) {
+      setSelectedTurfForSlots(turfs[0]);
+    }
+  }, [dashboardData, selectedTurfForSlots]);
+
 
 
   const cities = ['Bhopal', 'Indore', 'Delhi', 'Mumbai', 'Bangalore', 'Pune', 'Hyderabad', 'Chennai'];
@@ -514,12 +521,6 @@ export default function OwnerDashboard() {
   }
 
   const { overview, bookings, turfs } = dashboardData;
-
-  useEffect(() => {
-    if (turfs && turfs.length > 0 && !selectedTurfForSlots) {
-      setSelectedTurfForSlots(turfs[0]);
-    }
-  }, [turfs, selectedTurfForSlots]);
 
   const userInitials = getInitials(user?.name);
   const userFirstName = user?.name ? user.name.split(' ')[0] : 'Partner';
