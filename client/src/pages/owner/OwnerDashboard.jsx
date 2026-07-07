@@ -173,15 +173,19 @@ export default function OwnerDashboard() {
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copySourceDate, setCopySourceDate] = useState('');
   const [bulkReason, setBulkReason] = useState('Maintenance');
+  const [selectedTurfForSlots, setSelectedTurfForSlots] = useState(null);
 
   useEffect(() => {
     const loadSlots = async () => {
-      if (!selectedTurfForManage || manageSubTab !== 'slots') return;
+      const targetTurf = selectedTurfForSlots;
+      const isSlotsTabOpen = activeTab === 'slots';
+
+      if (!targetTurf || !isSlotsTabOpen) return;
       setSlotsLoading(true);
       try {
-        const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
+        const res = await turfService.getSlots(targetTurf.id || targetTurf._id, selectedDate);
         setSlotsData(res.data || []);
-        setSelectedSlotsList([]); // Reset multi-select when date/tab changes
+        setSelectedSlotsList([]); // Reset multi-select when date/tab/turf changes
       } catch (err) {
         console.error('Failed to load slots:', err);
       } finally {
@@ -189,7 +193,7 @@ export default function OwnerDashboard() {
       }
     };
     loadSlots();
-  }, [selectedTurfForManage, selectedDate, manageSubTab]);
+  }, [selectedTurfForSlots, selectedDate, activeTab]);
 
 
 
@@ -511,6 +515,12 @@ export default function OwnerDashboard() {
 
   const { overview, bookings, turfs } = dashboardData;
 
+  useEffect(() => {
+    if (turfs && turfs.length > 0 && !selectedTurfForSlots) {
+      setSelectedTurfForSlots(turfs[0]);
+    }
+  }, [turfs, selectedTurfForSlots]);
+
   const userInitials = getInitials(user?.name);
   const userFirstName = user?.name ? user.name.split(' ')[0] : 'Partner';
   const currentDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -519,7 +529,8 @@ export default function OwnerDashboard() {
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'manage', label: 'Arenas', icon: Settings },
     { id: 'bookings', label: 'Bookings', icon: Calendar },
-    { id: 'earnings', label: 'Earnings', icon: Landmark }
+    { id: 'earnings', label: 'Earnings', icon: Landmark },
+    { id: 'slots', label: 'Slots & Availability', icon: Clock }
   ];
 
   const steps = [
@@ -1442,8 +1453,6 @@ export default function OwnerDashboard() {
                         {[
                           { id: 'overview', label: 'Overview' },
                           { id: 'pricing', label: 'Pricing' },
-                          { id: 'slots', label: 'Slots & Availability' },
-                          { id: 'bookings', label: 'Bookings' },
                           { id: 'reviews', label: 'Reviews' },
                           { id: 'settings', label: 'Settings' }
                         ].map((subTab) => (
@@ -1727,409 +1736,7 @@ export default function OwnerDashboard() {
                           </motion.div>
                         )}
 
-                        {manageSubTab === 'slots' && (
-                          <motion.div 
-                            key="slots"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="space-y-6 text-left text-slate-800"
-                          >
-                            {/* Calendar & Filters Toolbar */}
-                            <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
-                              <div className="flex flex-wrap items-center gap-4">
-                                <div className="space-y-1">
-                                  <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Select Date</label>
-                                  <input 
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                    className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none focus:border-slate-500"
-                                  />
-                                </div>
 
-                                <div className="space-y-1">
-                                  <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Filter Status</label>
-                                  <select 
-                                    value={slotStatusFilter}
-                                    onChange={(e) => setSlotStatusFilter(e.target.value)}
-                                    className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer focus:border-slate-500"
-                                  >
-                                    <option value="all">All Slots</option>
-                                    <option value="available">Available</option>
-                                    <option value="booked">Booked</option>
-                                    <option value="blocked">Blocked</option>
-                                  </select>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setCopySourceDate(selectedDate);
-                                    setShowCopyModal(true);
-                                  }}
-                                  className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-750 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all"
-                                >
-                                  <Copy className="w-3.5 h-3.5 text-slate-500" />
-                                  <span>Copy Day Schedule</span>
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Quick Day Controls & Legend */}
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                              {/* Quick Actions */}
-                              <div className="flex flex-wrap gap-2.5">
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (confirm('Are you sure you want to block all slots for this entire day?')) {
-                                      try {
-                                        const allSlotRanges = slotsData.map(s => `${s.startTime}-${s.endTime}`);
-                                        await turfService.bulkUpdateSlots(selectedTurfForManage.id || selectedTurfForManage._id, {
-                                          date: selectedDate,
-                                          slots: allSlotRanges,
-                                          action: 'block',
-                                          reason: 'Entire Day Maintenance'
-                                        });
-                                        alert('Entire day blocked successfully.');
-                                        const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
-                                        setSlotsData(res.data || []);
-                                      } catch (err) {
-                                        alert('Failed to block day: ' + err.message);
-                                      }
-                                    }
-                                  }}
-                                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
-                                >
-                                  Block Entire Day
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={async () => {
-                                    if (confirm('Are you sure you want to unblock all slots for this entire day?')) {
-                                      try {
-                                        const allBlockedSlots = slotsData.filter(s => s.isBlocked).map(s => `${s.startTime}-${s.endTime}`);
-                                        if (allBlockedSlots.length === 0) {
-                                          alert('No blocked slots found on this day.');
-                                          return;
-                                        }
-                                        await turfService.bulkUpdateSlots(selectedTurfForManage.id || selectedTurfForManage._id, {
-                                          date: selectedDate,
-                                          slots: allBlockedSlots,
-                                          action: 'unblock'
-                                        });
-                                        alert('Entire day unblocked successfully.');
-                                        const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
-                                        setSlotsData(res.data || []);
-                                      } catch (err) {
-                                        alert('Failed to unblock day: ' + err.message);
-                                      }
-                                    }
-                                  }}
-                                  className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-350 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-sm"
-                                >
-                                  Unblock Entire Day
-                                </button>
-                              </div>
-
-                              {/* Legends */}
-                              <div className="flex items-center space-x-4 text-xs font-black text-slate-850 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
-                                <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-green-600 rounded-full inline-block shadow-sm"></span>
-                                  <span>Available</span>
-                                </div>
-                                <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-red-600 rounded-full inline-block shadow-sm"></span>
-                                  <span>Booked</span>
-                                </div>
-                                <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-slate-500 rounded-full inline-block shadow-sm"></span>
-                                  <span>Blocked</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Bulk Action Header Bar */}
-                            <AnimatePresence>
-                              {selectedSlotsList.length > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, y: -20 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  exit={{ opacity: 0, y: -20 }}
-                                  className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg border border-white/5"
-                                >
-                                  <div className="flex flex-col text-left space-y-0.5">
-                                    <span className="text-xs font-extrabold text-[#AAEE00] uppercase tracking-wider">{selectedSlotsList.length} slots selected</span>
-                                    <span className="text-[10px] text-slate-400 font-semibold">Perform bulk actions on selected time slots</span>
-                                  </div>
-
-                                  <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                                    <input 
-                                      type="text"
-                                      placeholder="Reason (e.g. Maintenance)"
-                                      value={bulkReason}
-                                      onChange={(e) => setBulkReason(e.target.value)}
-                                      className="px-3.5 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#AAEE00] placeholder-slate-500 flex-grow md:flex-grow-0"
-                                    />
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        try {
-                                          await turfService.bulkUpdateSlots(selectedTurfForManage.id || selectedTurfForManage._id, {
-                                            date: selectedDate,
-                                            slots: selectedSlotsList,
-                                            action: 'block',
-                                            reason: bulkReason
-                                          });
-                                          alert('Selected slots blocked successfully.');
-                                          setSelectedSlotsList([]);
-                                          const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
-                                          setSlotsData(res.data || []);
-                                        } catch (err) {
-                                          alert('Failed to block slots: ' + err.message);
-                                        }
-                                      }}
-                                      className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-sm whitespace-nowrap"
-                                    >
-                                      Block Selected
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={async () => {
-                                        try {
-                                          await turfService.bulkUpdateSlots(selectedTurfForManage.id || selectedTurfForManage._id, {
-                                            date: selectedDate,
-                                            slots: selectedSlotsList,
-                                            action: 'unblock'
-                                          });
-                                          alert('Selected slots unblocked successfully.');
-                                          setSelectedSlotsList([]);
-                                          const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
-                                          setSlotsData(res.data || []);
-                                        } catch (err) {
-                                          alert('Failed to unblock slots: ' + err.message);
-                                        }
-                                      }}
-                                      className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/10 whitespace-nowrap"
-                                    >
-                                      Unblock Selected
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setSelectedSlotsList([])}
-                                      className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-
-                            {/* Slots Grid */}
-                            {slotsLoading ? (
-                              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {Array(8).fill(0).map((_, i) => (
-                                  <div key={i} className="h-24 bg-white border border-slate-100 rounded-3xl animate-pulse"></div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {slotsData
-                                  .filter(slot => {
-                                    if (slotStatusFilter === 'available') return !slot.isBooked && !slot.isBlocked;
-                                    if (slotStatusFilter === 'booked') return slot.isBooked;
-                                    if (slotStatusFilter === 'blocked') return slot.isBlocked;
-                                    return true;
-                                  })
-                                  .map((slot) => {
-                                    const slotRange = `${slot.startTime}-${slot.endTime}`;
-                                    const isSelected = selectedSlotsList.includes(slotRange);
-                                    
-                                    const now = new Date();
-                                    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-                                    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-                                    const isPast = selectedDate === todayStr && slot.startTime < currentTimeStr;
-
-                                    let statusColor = 'border-green-300 bg-green-50 text-green-800 font-extrabold shadow-sm';
-                                    let statusText = 'Available';
-                                    let cardBg = 'bg-white border-slate-200 hover:border-slate-350';
-                                    
-                                    if (slot.isBooked) {
-                                      statusColor = 'border-red-300 bg-red-50 text-red-800 font-extrabold shadow-sm';
-                                      statusText = 'Booked';
-                                      cardBg = 'bg-red-50/20 border-red-200 hover:border-red-300';
-                                    } else if (slot.isBlocked) {
-                                      statusColor = 'border-slate-300 bg-slate-100 text-slate-700 font-extrabold shadow-sm';
-                                      statusText = 'Blocked';
-                                      cardBg = 'bg-slate-50 border-slate-200 hover:border-slate-300';
-                                    } else if (isPast) {
-                                      statusColor = 'border-slate-200 bg-slate-50 text-slate-400 font-extrabold';
-                                      statusText = 'Past Slot';
-                                      cardBg = 'bg-slate-50/40 border-slate-200 opacity-60 cursor-not-allowed';
-                                    }
-
-                                    return (
-                                      <div 
-                                        key={slot.startTime}
-                                        className={`p-5 rounded-3xl border transition-all flex flex-col justify-between space-y-4 hover:shadow-md ${
-                                          isSelected ? 'border-[#AAEE00] bg-[#AAEE00]/5 ring-2 ring-[#AAEE00]/20' : cardBg
-                                        }`}
-                                      >
-                                        <div className="flex items-start justify-between">
-                                          <div className="flex items-center space-x-2">
-                                            <input 
-                                              type="checkbox"
-                                              checked={isSelected}
-                                              disabled={slot.isBooked || isPast}
-                                              onChange={(e) => {
-                                                if (e.target.checked) {
-                                                  setSelectedSlotsList(prev => [...prev, slotRange]);
-                                                } else {
-                                                  setSelectedSlotsList(prev => prev.filter(r => r !== slotRange));
-                                                }
-                                              }}
-                                              className="rounded border-slate-350 text-primary bg-slate-50 focus:ring-primary w-4.5 h-4.5 accent-primary disabled:opacity-30 disabled:cursor-not-allowed"
-                                            />
-                                            <span className="text-xs font-black text-slate-950">{formatTime12H(slot.startTime)} - {formatTime12H(slot.endTime)}</span>
-                                          </div>
-
-                                          {/* Individual Toggle Switch */}
-                                          <button
-                                            type="button"
-                                            disabled={slot.isBooked || isPast}
-                                            onClick={async () => {
-                                              const action = slot.isBlocked ? 'unblock' : 'block';
-                                              try {
-                                                await turfService.bulkUpdateSlots(selectedTurfForManage.id || selectedTurfForManage._id, {
-                                                  date: selectedDate,
-                                                  slots: [slotRange],
-                                                  action,
-                                                  reason: 'Blocked by Owner'
-                                                });
-                                                const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
-                                                setSlotsData(res.data || []);
-                                              } catch (err) {
-                                                alert('Failed to update slot: ' + err.message);
-                                              }
-                                            }}
-                                            className="focus:outline-none disabled:opacity-35 disabled:cursor-not-allowed"
-                                          >
-                                            {slot.isBlocked ? (
-                                              <ToggleLeft className="w-8 h-8 text-slate-350" />
-                                            ) : slot.isBooked ? (
-                                              <ToggleRight className="w-8 h-8 text-red-200" />
-                                            ) : (
-                                              <ToggleRight className="w-8 h-8 text-[#5D7A00]" />
-                                            )}
-                                          </button>
-                                        </div>
-
-                                        <div className="flex items-center justify-between">
-                                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${statusColor}`}>
-                                            {statusText}
-                                          </span>
-                                          {slot.isBlocked && slot.blockedReason && (
-                                            <span className="text-[10px] font-black text-slate-700 italic truncate max-w-[100px]" title={slot.blockedReason}>
-                                              {slot.blockedReason}
-                                            </span>
-                                          )}
-                                          {slot.isBooked && (
-                                            <span className="text-[10px] font-black text-red-700">
-                                              User Booked
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-
-                                {slotsData.length === 0 && (
-                                  <div className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-3xl border border-slate-100 font-medium text-xs">
-                                    No slots available for this date.
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Recurring Availability Builder Accordion */}
-                            <div className="border border-slate-150 rounded-3xl overflow-hidden bg-white shadow-sm">
-                              <details className="group">
-                                <summary className="flex items-center justify-between p-6 cursor-pointer font-black text-sm text-slate-800 select-none hover:bg-slate-50/50">
-                                  <span>⚙️ Configure Recurring Weekly Schedule Rules</span>
-                                  <ChevronDown className="w-4.5 h-4.5 text-slate-400 group-open:rotate-180 transition-transform" />
-                                </summary>
-                                <div className="p-6 border-t border-slate-100 bg-slate-50/30">
-                                  <WeeklyScheduleBuilder 
-                                    initialSchedule={selectedTurfForManage.weeklySchedule} 
-                                    onSave={(sched) => handleUpdateScheduleAction(selectedTurfForManage.id, sched)} 
-                                  />
-                                </div>
-                              </details>
-                            </div>
-                          </motion.div>
-                        )}
-
-                        {manageSubTab === 'bookings' && (
-                          <motion.div 
-                            key="bookings"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4"
-                          >
-                            <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider text-left">Bookings for this Arena</h4>
-                            {bookings.filter(b => b.turfName === selectedTurfForManage.name).length === 0 ? (
-                              <div className="p-8 text-center bg-slate-50 border border-slate-100 rounded-2xl">
-                                <p className="text-xs text-slate-400">No bookings recorded for this arena yet.</p>
-                              </div>
-                            ) : (
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
-                                  <thead>
-                                    <tr className="border-b border-slate-100 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                      <th className="pb-3 pr-4">Player</th>
-                                      <th className="pb-3 px-4">Sport</th>
-                                      <th className="pb-3 px-4">Date & Slots</th>
-                                      <th className="pb-3 px-4 text-right">Amount</th>
-                                      <th className="pb-3 pl-4 text-right">Status</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-100 text-xs">
-                                    {bookings.filter(b => b.turfName === selectedTurfForManage.name).map((booking) => {
-                                      const initials = booking.userId ? booking.userId.substring(0, 2).toUpperCase() : 'GU';
-                                      return (
-                                        <tr key={booking._id || booking.id} className="hover:bg-slate-50/50">
-                                          <td className="py-3.5 pr-4 flex items-center space-x-2">
-                                            <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-[10px]">
-                                              {initials}
-                                            </div>
-                                            <span className="font-semibold text-slate-800 truncate">{booking.userId || 'Guest User'}</span>
-                                          </td>
-                                          <td className="py-3.5 px-4">
-                                            <span className="px-2 py-0.5 rounded-md bg-[#AAEE00]/10 text-[#5D7A00] text-[10px] font-bold uppercase">
-                                              {booking.sport}
-                                            </span>
-                                          </td>
-                                          <td className="py-3.5 px-4 text-slate-500 font-semibold">{booking.date} ({(booking.slots || []).join(', ')})</td>
-                                          <td className="py-3.5 px-4 text-right font-bold text-slate-800">₹{booking.totalAmount}</td>
-                                          <td className="py-3.5 pl-4 text-right">
-                                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                              booking.status?.toLowerCase() === 'confirmed' ? 'bg-green-50 text-[#5D7A00]' : 'bg-red-50 text-red-500'
-                                            }`}>{booking.status}</span>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </motion.div>
-                        )}
 
                         {manageSubTab === 'reviews' && (
                           <motion.div 
@@ -2397,6 +2004,390 @@ export default function OwnerDashboard() {
                   </div>
                 </motion.div>
               )}
+
+              {/* TAB 5: SLOTS & AVAILABILITY */}
+              {activeTab === 'slots' && (
+                <motion.div
+                  key="slots_tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-6 text-left"
+                >
+                  {/* Dropdown to select turf if multiple */}
+                  {turfs.length === 0 ? (
+                    <div className="bg-white border border-slate-100 p-8 rounded-3xl shadow-sm text-center">
+                      <AlertCircle className="w-8 h-8 text-slate-350 mx-auto mb-2" />
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">No Listed Arenas Found</p>
+                      <p className="text-xs text-slate-405 mt-1">Please add a venue inside "Arenas" tab first to manage slots.</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Arena Selector Header */}
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-black text-slate-800 uppercase tracking-wider">Slots & Availability Manager</h4>
+                          <p className="text-[10px] text-slate-400 font-semibold">Select an arena to block, unblock, or copy daily slot settings.</p>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Select Arena:</span>
+                          <select 
+                            value={selectedTurfForSlots?.id || selectedTurfForSlots?._id || ''}
+                            onChange={(e) => {
+                              const found = turfs.find(t => (t.id || t._id) === e.target.value);
+                              if (found) setSelectedTurfForSlots(found);
+                            }}
+                            className="px-3.5 py-2 bg-slate-50 border border-slate-350 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer"
+                          >
+                            {turfs.map(t => (
+                              <option key={t.id || t._id} value={t.id || t._id}>{t.name} ({t.city})</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {selectedTurfForSlots && (
+                        <div className="space-y-6">
+                          {/* Calendar & Filters Toolbar */}
+                          <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
+                            <div className="flex flex-wrap items-center gap-4">
+                              <div className="space-y-1">
+                                <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Select Date</label>
+                                <input 
+                                  type="date"
+                                  value={selectedDate}
+                                  onChange={(e) => setSelectedDate(e.target.value)}
+                                  className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none"
+                                />
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Filter Status</label>
+                                <select 
+                                  value={slotStatusFilter}
+                                  onChange={(e) => setSlotStatusFilter(e.target.value)}
+                                  className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer focus:border-slate-500"
+                                >
+                                  <option value="all">All Slots</option>
+                                  <option value="available">Available</option>
+                                  <option value="booked">Booked</option>
+                                  <option value="blocked">Blocked</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCopySourceDate(selectedDate);
+                                  setShowCopyModal(true);
+                                }}
+                                className="px-4 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-750 text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all"
+                              >
+                                <Copy className="w-3.5 h-3.5 text-slate-500" />
+                                <span>Copy Day Schedule</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Quick Day Controls & Legend */}
+                          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="flex flex-wrap gap-2.5">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (confirm('Are you sure you want to block all slots for this entire day?')) {
+                                    try {
+                                      const allSlotRanges = slotsData.map(s => `${s.startTime}-${s.endTime}`);
+                                      await turfService.bulkUpdateSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, {
+                                        date: selectedDate,
+                                        slots: allSlotRanges,
+                                        action: 'block',
+                                        reason: 'Entire Day Maintenance'
+                                      });
+                                      alert('Entire day blocked successfully.');
+                                      const res = await turfService.getSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, selectedDate);
+                                      setSlotsData(res.data || []);
+                                    } catch (err) {
+                                      alert('Failed to block day: ' + err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                              >
+                                Block Entire Day
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (confirm('Are you sure you want to unblock all slots for this entire day?')) {
+                                    try {
+                                      const allBlockedSlots = slotsData.filter(s => s.isBlocked).map(s => `${s.startTime}-${s.endTime}`);
+                                      if (allBlockedSlots.length === 0) {
+                                        alert('No blocked slots found on this day.');
+                                        return;
+                                      }
+                                      await turfService.bulkUpdateSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, {
+                                        date: selectedDate,
+                                        slots: allBlockedSlots,
+                                        action: 'unblock'
+                                      });
+                                      alert('Entire day unblocked successfully.');
+                                      const res = await turfService.getSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, selectedDate);
+                                      setSlotsData(res.data || []);
+                                    } catch (err) {
+                                      alert('Failed to unblock day: ' + err.message);
+                                    }
+                                  }
+                                }}
+                                className="px-4 py-2 bg-white border border-slate-200 hover:border-slate-350 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-sm"
+                              >
+                                Unblock Entire Day
+                              </button>
+                            </div>
+
+                            {/* Legends */}
+                            <div className="flex items-center space-x-4 text-xs font-black text-slate-850 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
+                              <div className="flex items-center space-x-1.5">
+                                <span className="w-2.5 h-2.5 bg-green-600 rounded-full inline-block shadow-sm"></span>
+                                <span>Available</span>
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                <span className="w-2.5 h-2.5 bg-red-600 rounded-full inline-block shadow-sm"></span>
+                                <span>Booked</span>
+                              </div>
+                              <div className="flex items-center space-x-1.5">
+                                <span className="w-2.5 h-2.5 bg-slate-500 rounded-full inline-block shadow-sm"></span>
+                                <span>Blocked</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bulk Action Header Bar */}
+                          <AnimatePresence>
+                            {selectedSlotsList.length > 0 && (
+                              <motion.div
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="bg-slate-900 text-white p-5 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg border border-white/5"
+                              >
+                                <div className="flex flex-col text-left space-y-0.5">
+                                  <span className="text-xs font-extrabold text-[#AAEE00] uppercase tracking-wider">{selectedSlotsList.length} slots selected</span>
+                                  <span className="text-[10px] text-slate-400 font-semibold">Perform bulk actions on selected time slots</span>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                                  <input 
+                                    type="text"
+                                    placeholder="Reason (e.g. Maintenance)"
+                                    value={bulkReason}
+                                    onChange={(e) => setBulkReason(e.target.value)}
+                                    className="px-3.5 py-1.5 bg-white/5 border border-white/10 rounded-xl text-xs text-white focus:outline-none focus:border-[#AAEE00] placeholder-slate-500 flex-grow md:flex-grow-0"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try {
+                                        await turfService.bulkUpdateSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, {
+                                          date: selectedDate,
+                                          slots: selectedSlotsList,
+                                          action: 'block',
+                                          reason: bulkReason
+                                        });
+                                        alert('Selected slots blocked successfully.');
+                                        setSelectedSlotsList([]);
+                                        const res = await turfService.getSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, selectedDate);
+                                        setSlotsData(res.data || []);
+                                      } catch (err) {
+                                        alert('Failed to block slots: ' + err.message);
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-[#AAEE00] hover:bg-[#b0f700] text-slate-900 text-xs font-black rounded-xl transition-all shadow-sm whitespace-nowrap"
+                                  >
+                                    Block Selected
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try {
+                                        await turfService.bulkUpdateSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, {
+                                          date: selectedDate,
+                                          slots: selectedSlotsList,
+                                          action: 'unblock'
+                                        });
+                                        alert('Selected slots unblocked successfully.');
+                                        setSelectedSlotsList([]);
+                                        const res = await turfService.getSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, selectedDate);
+                                        setSlotsData(res.data || []);
+                                      } catch (err) {
+                                        alert('Failed to unblock slots: ' + err.message);
+                                      }
+                                    }}
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all border border-white/10 whitespace-nowrap"
+                                  >
+                                    Unblock Selected
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedSlotsList([])}
+                                    className="text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {/* Slots Grid */}
+                          {slotsLoading ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {Array(8).fill(0).map((_, i) => (
+                                <div key={i} className="h-24 bg-white border border-slate-100 rounded-3xl animate-pulse"></div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                              {slotsData
+                                .filter(slot => {
+                                  if (slotStatusFilter === 'available') return !slot.isBooked && !slot.isBlocked;
+                                  if (slotStatusFilter === 'booked') return slot.isBooked;
+                                  if (slotStatusFilter === 'blocked') return slot.isBlocked;
+                                  return true;
+                                })
+                                .map((slot) => {
+                                  const slotRange = `${slot.startTime}-${slot.endTime}`;
+                                  const isSelected = selectedSlotsList.includes(slotRange);
+                                  
+                                  const now = new Date();
+                                  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                                  const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                                  const isPast = selectedDate === todayStr && slot.startTime < currentTimeStr;
+
+                                  let statusColor = 'border-green-300 bg-green-50 text-green-800 font-extrabold shadow-sm';
+                                  let statusText = 'Available';
+                                  let cardBg = 'bg-white border-slate-200 hover:border-slate-350';
+                                  
+                                  if (slot.isBooked) {
+                                    statusColor = 'border-red-300 bg-red-50 text-red-800 font-extrabold shadow-sm';
+                                    statusText = 'Booked';
+                                    cardBg = 'bg-red-50/20 border-red-200 hover:border-red-300';
+                                  } else if (slot.isBlocked) {
+                                    statusColor = 'border-slate-300 bg-slate-100 text-slate-700 font-extrabold shadow-sm';
+                                    statusText = 'Blocked';
+                                    cardBg = 'bg-slate-50 border-slate-200 hover:border-slate-300';
+                                  } else if (isPast) {
+                                    statusColor = 'border-slate-200 bg-slate-55 text-slate-400 font-extrabold';
+                                    statusText = 'Past Slot';
+                                    cardBg = 'bg-slate-50/40 border-slate-200 opacity-60 cursor-not-allowed';
+                                  }
+
+                                  return (
+                                    <div 
+                                      key={slot.startTime}
+                                      className={`p-5 rounded-3xl border transition-all flex flex-col justify-between space-y-4 hover:shadow-md ${
+                                        isSelected ? 'border-[#AAEE00] bg-[#AAEE00]/5 ring-2 ring-[#AAEE00]/20' : cardBg
+                                      }`}
+                                    >
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex items-center space-x-2">
+                                          <input 
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            disabled={slot.isBooked || isPast}
+                                            onChange={(e) => {
+                                              if (e.target.checked) {
+                                                setSelectedSlotsList(prev => [...prev, slotRange]);
+                                              } else {
+                                                setSelectedSlotsList(prev => prev.filter(r => r !== slotRange));
+                                              }
+                                            }}
+                                            className="rounded border-slate-350 text-primary bg-slate-50 focus:ring-primary w-4.5 h-4.5 accent-primary disabled:opacity-30 disabled:cursor-not-allowed"
+                                          />
+                                          <span className="text-xs font-black text-slate-950">{formatTime12H(slot.startTime)} - {formatTime12H(slot.endTime)}</span>
+                                        </div>
+
+                                        {/* Individual Toggle Switch */}
+                                        <button
+                                          type="button"
+                                          disabled={slot.isBooked || isPast}
+                                          onClick={async () => {
+                                            const action = slot.isBlocked ? 'unblock' : 'block';
+                                            try {
+                                              await turfService.bulkUpdateSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, {
+                                                date: selectedDate,
+                                                slots: [slotRange],
+                                                action,
+                                                reason: 'Blocked by Owner'
+                                              });
+                                              const res = await turfService.getSlots(selectedTurfForSlots.id || selectedTurfForSlots._id, selectedDate);
+                                              setSlotsData(res.data || []);
+                                            } catch (err) {
+                                              alert('Failed to update slot: ' + err.message);
+                                            }
+                                          }}
+                                          className="focus:outline-none disabled:opacity-35 disabled:cursor-not-allowed"
+                                        >
+                                          {slot.isBlocked ? (
+                                            <ToggleLeft className="w-8 h-8 text-slate-350" />
+                                          ) : slot.isBooked ? (
+                                            <ToggleRight className="w-8 h-8 text-red-200" />
+                                          ) : (
+                                            <ToggleRight className="w-8 h-8 text-[#5D7A00]" />
+                                          )}
+                                        </button>
+                                      </div>
+
+                                      <div className="flex items-center justify-between">
+                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider ${statusColor}`}>
+                                          {statusText}
+                                        </span>
+                                        {slot.isBlocked && slot.blockedReason && (
+                                          <span className="text-[10px] font-black text-slate-700 italic truncate max-w-[100px]" title={slot.blockedReason}>
+                                            {slot.blockedReason}
+                                          </span>
+                                        )}
+                                        {slot.isBooked && (
+                                          <span className="text-[10px] font-black text-red-700">
+                                            User Booked
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+
+                              {slotsData.length === 0 && (
+                                <div className="col-span-full py-12 text-center text-slate-400 bg-slate-50 rounded-3xl border border-slate-100 font-medium text-xs">
+                                  No slots available for this date.
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Recurring Availability Builder Accordion */}
+                          <div className="border border-slate-150 rounded-3xl overflow-hidden bg-white shadow-sm">
+                            <details className="group">
+                              <summary className="flex items-center justify-between p-6 cursor-pointer font-black text-sm text-slate-800 select-none hover:bg-slate-50/50">
+                                <span>⚙️ Configure Recurring Weekly Schedule Rules</span>
+                                <ChevronDown className="w-4.5 h-4.5 text-slate-400 group-open:rotate-180 transition-transform" />
+                              </summary>
+                              <div className="p-6 border-t border-slate-100 bg-slate-50/30">
+                                <WeeklyScheduleBuilder 
+                                  initialSchedule={selectedTurfForSlots.weeklySchedule} 
+                                  onSave={(sched) => handleUpdateScheduleAction(selectedTurfForSlots.id, sched)} 
+                                />
+                              </div>
+                            </details>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              )}
             </>
           )}
 
@@ -2441,14 +2432,19 @@ export default function OwnerDashboard() {
                       alert('Source and target dates must be different.');
                       return;
                     }
+                    const activeTurf = activeTab === 'slots' ? selectedTurfForSlots : selectedTurfForManage;
+                    if (!activeTurf) {
+                      alert('No arena selected.');
+                      return;
+                    }
                     try {
-                      await turfService.copyDaySchedule(selectedTurfForManage.id || selectedTurfForManage._id, {
+                      await turfService.copyDaySchedule(activeTurf.id || activeTurf._id, {
                         sourceDate: copySourceDate,
                         targetDate: selectedDate
                       });
                       alert('Schedule copied successfully!');
                       setShowCopyModal(false);
-                      const res = await turfService.getSlots(selectedTurfForManage.id || selectedTurfForManage._id, selectedDate);
+                      const res = await turfService.getSlots(activeTurf.id || activeTurf._id, selectedDate);
                       setSlotsData(res.data || []);
                     } catch (err) {
                       alert('Failed to copy schedule: ' + err.message);
