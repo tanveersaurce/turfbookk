@@ -409,7 +409,22 @@ export const ownerService = {
     ]);
 
     const turfs = turfsRes.data.data || [];
-    const bookings = bookingsRes.data.data || [];
+    const rawBookings = bookingsRes.data.data || [];
+
+    // Map bookings to format expected by OwnerDashboard.jsx
+    const bookings = rawBookings.map(b => ({
+      id: b._id || b.id,
+      _id: b._id || b.id,
+      userId: b.user?.name || 'Guest User', // OwnerDashboard.jsx expects userId to contain player name
+      turfName: b.turf?.name || 'Sports Arena',
+      sport: b.sport,
+      date: b.date,
+      slots: [`${b.startTime} - ${b.endTime}`],
+      totalAmount: b.totalAmount,
+      advancePaid: Math.round(b.totalAmount * 0.2), // Standard 20% advance
+      status: b.status,
+      paymentStatus: b.paymentStatus
+    }));
 
     // Calculate overview statistics
     const confirmedPaidBookings = bookings.filter(b => b.status === 'confirmed' || b.paymentStatus === 'paid');
