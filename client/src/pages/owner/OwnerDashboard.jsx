@@ -1728,21 +1728,21 @@ export default function OwnerDashboard() {
                             <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
                               <div className="flex flex-wrap items-center gap-4">
                                 <div className="space-y-1">
-                                  <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Select Date</label>
+                                  <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Select Date</label>
                                   <input 
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
-                                    className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none"
+                                    className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none focus:border-slate-500"
                                   />
                                 </div>
 
                                 <div className="space-y-1">
-                                  <label className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider">Filter Status</label>
+                                  <label className="block text-[10px] uppercase font-black text-slate-700 tracking-wider">Filter Status</label>
                                   <select 
                                     value={slotStatusFilter}
                                     onChange={(e) => setSlotStatusFilter(e.target.value)}
-                                    className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none cursor-pointer"
+                                    className="px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-extrabold text-slate-900 focus:outline-none cursor-pointer focus:border-slate-500"
                                   >
                                     <option value="all">All Slots</option>
                                     <option value="available">Available</option>
@@ -1825,17 +1825,17 @@ export default function OwnerDashboard() {
                               </div>
 
                               {/* Legends */}
-                              <div className="flex items-center space-x-4 text-xs font-bold text-slate-500 bg-white border border-slate-100 px-4 py-2 rounded-xl shadow-sm">
+                              <div className="flex items-center space-x-4 text-xs font-black text-slate-850 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
                                 <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-green-500 rounded-full inline-block"></span>
+                                  <span className="w-2.5 h-2.5 bg-green-600 rounded-full inline-block shadow-sm"></span>
                                   <span>Available</span>
                                 </div>
                                 <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block"></span>
+                                  <span className="w-2.5 h-2.5 bg-red-600 rounded-full inline-block shadow-sm"></span>
                                   <span>Booked</span>
                                 </div>
                                 <div className="flex items-center space-x-1.5">
-                                  <span className="w-2.5 h-2.5 bg-slate-400 rounded-full inline-block"></span>
+                                  <span className="w-2.5 h-2.5 bg-slate-500 rounded-full inline-block shadow-sm"></span>
                                   <span>Blocked</span>
                                 </div>
                               </div>
@@ -1938,21 +1938,25 @@ export default function OwnerDashboard() {
                                     const slotRange = `${slot.startTime}-${slot.endTime}`;
                                     const isSelected = selectedSlotsList.includes(slotRange);
                                     
-                                    let statusColor = 'border-green-100 bg-green-50/30 text-green-700';
+                                    let statusColor = 'border-green-300 bg-green-50 text-green-800 font-extrabold shadow-sm';
                                     let statusText = 'Available';
+                                    let cardBg = 'bg-white border-slate-200 hover:border-slate-350';
+                                    
                                     if (slot.isBooked) {
-                                      statusColor = 'border-red-100 bg-red-50/30 text-red-650';
+                                      statusColor = 'border-red-300 bg-red-50 text-red-800 font-extrabold shadow-sm';
                                       statusText = 'Booked';
+                                      cardBg = 'bg-red-50/20 border-red-200 hover:border-red-300';
                                     } else if (slot.isBlocked) {
-                                      statusColor = 'border-slate-200 bg-slate-55 text-slate-500';
+                                      statusColor = 'border-slate-300 bg-slate-100 text-slate-700 font-extrabold shadow-sm';
                                       statusText = 'Blocked';
+                                      cardBg = 'bg-slate-50 border-slate-200 hover:border-slate-300';
                                     }
 
                                     return (
                                       <div 
                                         key={slot.startTime}
                                         className={`p-5 rounded-3xl border transition-all flex flex-col justify-between space-y-4 hover:shadow-md ${
-                                          isSelected ? 'border-[#AAEE00] bg-[#AAEE00]/5 ring-2 ring-[#AAEE00]/20' : 'bg-white border-slate-100'
+                                          isSelected ? 'border-[#AAEE00] bg-[#AAEE00]/5 ring-2 ring-[#AAEE00]/20' : cardBg
                                         }`}
                                       >
                                         <div className="flex items-start justify-between">
@@ -1970,7 +1974,7 @@ export default function OwnerDashboard() {
                                               }}
                                               className="rounded border-slate-350 text-primary bg-slate-50 focus:ring-primary w-4.5 h-4.5 accent-primary disabled:opacity-30 disabled:cursor-not-allowed"
                                             />
-                                            <span className="text-xs font-black text-slate-800">{slot.startTime} - {slot.endTime}</span>
+                                            <span className="text-xs font-black text-slate-950">{slot.startTime} - {slot.endTime}</span>
                                           </div>
 
                                           {/* Individual Toggle Switch */}
@@ -2009,12 +2013,12 @@ export default function OwnerDashboard() {
                                             {statusText}
                                           </span>
                                           {slot.isBlocked && slot.blockedReason && (
-                                            <span className="text-[10px] font-medium text-slate-400 italic truncate max-w-[100px]" title={slot.blockedReason}>
+                                            <span className="text-[10px] font-black text-slate-700 italic truncate max-w-[100px]" title={slot.blockedReason}>
                                               {slot.blockedReason}
                                             </span>
                                           )}
                                           {slot.isBooked && (
-                                            <span className="text-[10px] font-bold text-slate-400">
+                                            <span className="text-[10px] font-black text-red-700">
                                               User Booked
                                             </span>
                                           )}
