@@ -1938,6 +1938,11 @@ export default function OwnerDashboard() {
                                     const slotRange = `${slot.startTime}-${slot.endTime}`;
                                     const isSelected = selectedSlotsList.includes(slotRange);
                                     
+                                    const now = new Date();
+                                    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                                    const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                                    const isPast = selectedDate === todayStr && slot.startTime < currentTimeStr;
+
                                     let statusColor = 'border-green-300 bg-green-50 text-green-800 font-extrabold shadow-sm';
                                     let statusText = 'Available';
                                     let cardBg = 'bg-white border-slate-200 hover:border-slate-350';
@@ -1950,6 +1955,10 @@ export default function OwnerDashboard() {
                                       statusColor = 'border-slate-300 bg-slate-100 text-slate-700 font-extrabold shadow-sm';
                                       statusText = 'Blocked';
                                       cardBg = 'bg-slate-50 border-slate-200 hover:border-slate-300';
+                                    } else if (isPast) {
+                                      statusColor = 'border-slate-200 bg-slate-50 text-slate-400 font-extrabold';
+                                      statusText = 'Past Slot';
+                                      cardBg = 'bg-slate-50/40 border-slate-200 opacity-60 cursor-not-allowed';
                                     }
 
                                     return (
@@ -1964,7 +1973,7 @@ export default function OwnerDashboard() {
                                             <input 
                                               type="checkbox"
                                               checked={isSelected}
-                                              disabled={slot.isBooked}
+                                              disabled={slot.isBooked || isPast}
                                               onChange={(e) => {
                                                 if (e.target.checked) {
                                                   setSelectedSlotsList(prev => [...prev, slotRange]);
@@ -1980,7 +1989,7 @@ export default function OwnerDashboard() {
                                           {/* Individual Toggle Switch */}
                                           <button
                                             type="button"
-                                            disabled={slot.isBooked}
+                                            disabled={slot.isBooked || isPast}
                                             onClick={async () => {
                                               const action = slot.isBlocked ? 'unblock' : 'block';
                                               try {

@@ -49,6 +49,20 @@ export const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Invalid start and end times.' });
     }
 
+    // Concurrency / past slot safeguard: prevent booking slots that are in the past today
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (date === todayStr) {
+      const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      if (startTime < currentTimeStr) {
+        if (useTransaction && session) {
+          await session.abortTransaction();
+          session.endSession();
+        }
+        return res.status(400).json({ success: false, message: 'Cannot book a slot that has already passed.' });
+      }
+    }
+
     const totalAmount = (turf.pricePerHour + (turf.lightingFees || 0)) * duration;
 
     // 2. Double-booking check: Ensure slots are available in Turf model

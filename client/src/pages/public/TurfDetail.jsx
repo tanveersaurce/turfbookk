@@ -799,7 +799,12 @@ export default function TurfDetail() {
                       const slotStr = `${slot.startTime} - ${slot.endTime}`;
                       const isSelected = selectedSlots.includes(slotStr);
                       const isLocked = isSlotSocketLocked(slot);
-                      const isBooked = slot.isBooked || slot.isBlocked || realtimeBookedSlots.includes(`${slot.startTime}-${slot.endTime}`);
+                      const now = new Date();
+                      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                      const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                      const isPast = bookingDate === todayStr && slot.startTime < currentTimeStr;
+
+                      const isBooked = slot.isBooked || slot.isBlocked || isPast || realtimeBookedSlots.includes(`${slot.startTime}-${slot.endTime}`);
 
                       let classes = "py-2.5 rounded-xl text-[10px] font-extrabold text-center transition-all border focus:outline-none ";
                       
