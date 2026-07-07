@@ -72,6 +72,17 @@ const amenitiesList = [
   { id: 'coaching', label: 'Coaching', emoji: '🎓' }
 ];
 
+const formatTime12H = (time24) => {
+  if (!time24) return '';
+  const parts = time24.split(':');
+  if (parts.length < 2) return '';
+  const hrs = parseInt(parts[0], 10);
+  const minutes = parts[1];
+  const modifier = hrs >= 12 ? 'PM' : 'AM';
+  const formattedHrs = hrs % 12 === 0 ? 12 : hrs % 12;
+  return `${String(formattedHrs).padStart(2, '0')}:${minutes} ${modifier}`;
+};
+
 const convertTo24Hour = (timeStr) => {
   if (!timeStr) return '06:00';
   const parts = timeStr.split(' ');
@@ -1983,7 +1994,7 @@ export default function OwnerDashboard() {
                                               }}
                                               className="rounded border-slate-350 text-primary bg-slate-50 focus:ring-primary w-4.5 h-4.5 accent-primary disabled:opacity-30 disabled:cursor-not-allowed"
                                             />
-                                            <span className="text-xs font-black text-slate-950">{slot.startTime} - {slot.endTime}</span>
+                                            <span className="text-xs font-black text-slate-950">{formatTime12H(slot.startTime)} - {formatTime12H(slot.endTime)}</span>
                                           </div>
 
                                           {/* Individual Toggle Switch */}
