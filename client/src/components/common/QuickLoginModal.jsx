@@ -60,12 +60,15 @@ export default function QuickLoginModal() {
   };
 
   const handleGoogleLogin = async () => {
+    const userEmail = window.prompt("Enter your Google Account Email:", "");
+    if (!userEmail || !userEmail.trim()) return;
+
     dispatch(authStart());
     try {
-      const data = await authService.googleLogin('mock_credential');
+      const data = await authService.googleLogin({ email: userEmail.trim() });
       dispatch(authSuccess(data));
       handleClose();
-      if (currentBooking.turfId) {
+      if (currentBooking?.turfId) {
         navigate('/checkout');
       }
     } catch (err) {

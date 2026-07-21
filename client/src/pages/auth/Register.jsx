@@ -68,9 +68,12 @@ export default function Register() {
   };
 
   const handleGoogleLogin = async () => {
+    const userEmail = window.prompt("Enter your Google Account Email:", "");
+    if (!userEmail || !userEmail.trim()) return;
+
     dispatch(authStart());
     try {
-      const data = await authService.googleLogin('mock_credential');
+      const data = await authService.googleLogin({ email: userEmail.trim() });
       dispatch(authSuccess(data));
       if (currentBooking?.turfId) {
         navigate('/checkout');
