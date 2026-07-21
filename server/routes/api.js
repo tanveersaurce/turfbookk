@@ -14,6 +14,7 @@ import {
   getMe,
   forgotPassword,
   resetPassword,
+  googleAuth,
 } from '../controllers/auth.controller.js';
 
 import {
@@ -84,6 +85,7 @@ const router = express.Router();
 // ==========================================
 router.post('/auth/register', authLimiter, register);
 router.post('/auth/login', authLimiter, login);
+router.post('/auth/google', authLimiter, googleAuth);
 router.post('/auth/logout', protect, logout);
 router.post('/auth/forgot-password', authLimiter, forgotPassword);
 router.post('/auth/reset-password', authLimiter, resetPassword);

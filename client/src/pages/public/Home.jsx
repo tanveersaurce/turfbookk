@@ -120,24 +120,24 @@ export default function Home() {
   const topRatedTurfs = [...turfs].sort((a, b) => b.rating - a.rating).slice(0, 4);
 
   return (
-    <div className="space-y-16 pb-20 overflow-x-hidden bg-[#FAFBFD] text-slate-800">
+    <div className="space-y-12 sm:space-y-16 pb-16 sm:pb-20 overflow-x-hidden bg-[#FAFBFD] text-slate-800">
       {/* 1. HERO SECTION */}
-      <section className="relative py-12 md:py-20 bg-gradient-to-b from-[#FAFBFD]/30 to-[#FAFBFD] px-4 max-w-8xl mx-auto">
+      <section className="relative py-10 sm:py-12 md:py-20 bg-gradient-to-b from-[#FAFBFD]/30 to-[#FAFBFD] px-4 max-w-8xl mx-auto">
         {/* Background Action Image with dark Overlay */}
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://i.pinimg.com/736x/9c/b0/e1/9cb0e1ecc61b24d9a84c529ea80d661b.jpg" 
+          <img
+            src="https://i.pinimg.com/736x/9c/b0/e1/9cb0e1ecc61b24d9a84c529ea80d661b.jpg"
             alt="Sports background"
-            className="w-full h-full"
+            className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0F1115] via-[#0F1115]/60 to-transparent"></div>
         </div>
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-6">
+        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 items-center pt-4 sm:pt-6">
           {/* Left Column: Heading & Badge */}
-          <div className="lg:col-span-8 space-y-6 text-left pl-10">
+          <div className="lg:col-span-8 space-y-5 sm:space-y-6 text-left pl-0 lg:pl-10">
             {/* 5-Star Reviews Badge */}
-            <div className="inline-flex items-center space-x-2 bg-slate-100 border border-slate-200 px-3.5 py-1.5 rounded-full">
+            <div className="inline-flex items-center space-x-2 bg-slate-100 border border-slate-200 px-3 sm:px-3.5 py-1.5 rounded-full">
               <div className="flex items-center space-x-0.5 text-[#FFC107]">
                 <Star className="w-3.5 h-3.5 fill-[#FFC107] text-[#FFC107]" />
                 <Star className="w-3.5 h-3.5 fill-[#FFC107] text-[#FFC107]" />
@@ -148,7 +148,7 @@ export default function Home() {
               <span className="text-xs text-slate-700 font-bold">10k+ reviews</span>
             </div>
 
-            <h1 className="text-4xl sm:text-6xl font-black text-white leading-tight">
+            <h1 className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-black text-white leading-tight">
               Book Your Turf, <br />
               <span className="text-primary">Play Anytime</span>
             </h1>
@@ -157,24 +157,24 @@ export default function Home() {
             </p>
 
             {/* Quick trust metrics */}
-            <div className="flex items-center space-x-6 text-xs text-slate-300 pt-2 font-bold">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-slate-300 pt-2 font-bold">
               <div className="flex items-center space-x-1.5">
-                <ShieldCheck className="w-4.5 h-4.5 text-primary" /> 
+                <ShieldCheck className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary shrink-0" />
                 <span>Verified Arenas</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <Sparkles className="w-4.5 h-4.5 text-primary" /> 
+                <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary shrink-0" />
                 <span>Instant Confirmation</span>
               </div>
             </div>
           </div>
 
           {/* Right Column: Search Card Widget */}
-          <div className="lg:col-span-4">
-            <motion.div 
+          <div className="lg:col-span-4 w-full">
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-slate-100 p-5 rounded-2xl shadow-xl space-y-4 max-w-[360px] mx-auto lg:ml-auto"
+              className="bg-white border border-slate-100 p-4 sm:p-5 rounded-2xl shadow-xl space-y-4 w-full max-w-[400px] sm:max-w-[360px] mx-auto lg:ml-auto"
             >
               <div className="text-left">
                 <h3 className="text-base font-black text-slate-900">Find a Venue</h3>
@@ -192,8 +192,8 @@ export default function Home() {
                 <div className="space-y-0.5 text-left">
                   <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Select Activity</label>
                   <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <Award className="w-4 h-4 text-slate-400" />
-                    <select 
+                    <Award className="w-4 h-4 text-slate-400 shrink-0" />
+                    <select
                       className="bg-transparent text-xs text-slate-800 focus:outline-none w-full font-bold cursor-pointer"
                       onChange={(e) => {
                         if (e.target.value === 'coaching') {
@@ -212,9 +212,9 @@ export default function Home() {
                 <div className="space-y-0.5 text-left">
                   <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Sport</label>
                   <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <Award className="w-4 h-4 text-slate-400" />
-                    <select 
-                      value={sport} 
+                    <Award className="w-4 h-4 text-slate-400 shrink-0" />
+                    <select
+                      value={sport}
                       onChange={(e) => setSport(e.target.value)}
                       className="bg-transparent text-xs text-slate-800 focus:outline-none w-full font-bold cursor-pointer"
                     >
@@ -227,8 +227,8 @@ export default function Home() {
                 <div className="space-y-0.5 text-left">
                   <label className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Date</label>
                   <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                    <Calendar className="w-4 h-4 text-slate-400" />
-                    <input 
+                    <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                    <input
                       type="date"
                       min={getLocalDateString()}
                       value={date}
@@ -239,7 +239,7 @@ export default function Home() {
                 </div>
 
                 {/* Find Venue Button */}
-                <button 
+                <button
                   type="submit"
                   className="w-full py-3 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-[0_4px_15px_rgba(170,238,0,0.15)] flex items-center justify-center space-x-2 focus:outline-none"
                 >
@@ -255,16 +255,16 @@ export default function Home() {
       {/* 2. AD BANNER */}
       {activeAd && (
         <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative rounded-2xl overflow-hidden h-40 sm:h-48 border border-slate-100 group shadow-md">
-            <img 
+          <div className="relative rounded-2xl overflow-hidden h-44 sm:h-48 border border-slate-100 group shadow-md">
+            <img
               src="https://i.pinimg.com/1200x/c3/98/ae/c398aed6e0abdc94e540998649723cbe.jpg"
               alt={activeAd.title}
               className="w-full h-full object-cover group-hover:scale-101 transition-transform duration-700"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent flex flex-col justify-center p-6 space-y-2 text-left">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent flex flex-col justify-center p-4 sm:p-6 space-y-2 text-left">
               <span className="px-2 py-0.5 bg-primary text-black font-extrabold rounded-md text-[9px] uppercase tracking-wider w-fit">Featured Banner</span>
-              <h3 className="text-lg sm:text-2xl font-black text-white max-w-md">{activeAd.title}</h3>
-              <a 
+              <h3 className="text-base sm:text-lg md:text-2xl font-black text-white max-w-[85%] sm:max-w-md line-clamp-2">{activeAd.title}</h3>
+              <a
                 href={activeAd.linkUrl}
                 className="text-xs text-primary font-bold hover:underline flex items-center space-x-1"
               >
@@ -278,14 +278,14 @@ export default function Home() {
 
       {/* 3. TOP SPORTS VENUES SECTION */}
       <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex justify-between items-end">
+        <div className="flex flex-wrap justify-between items-end gap-2">
           <div className="text-left">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Top Sports Venues</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">Top Sports Venues</h2>
             <p className="text-xs text-slate-500 font-semibold mt-0.5">Find your ideal court for quality and safety</p>
           </div>
-          <button 
-            onClick={() => navigate('/search')} 
-            className="text-xs font-bold text-slate-700 hover:text-black hover:underline flex items-center space-x-1"
+          <button
+            onClick={() => navigate('/search')}
+            className="text-xs font-bold text-slate-700 hover:text-black hover:underline flex items-center space-x-1 shrink-0"
           >
             <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -293,14 +293,18 @@ export default function Home() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6 sm:overflow-visible sm:pb-0">
             <SkeletonLoader count={4} />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            {topRatedTurfs.map(t => <TurfCard key={t.id || t._id} turf={t} />)}
+          <div className="flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-6 sm:overflow-visible sm:pb-0">
+            {topRatedTurfs.map(t => (
+              <div key={t.id || t._id} className="min-w-[78%] xs:min-w-[55%] shrink-0 snap-start sm:min-w-0 sm:shrink sm:w-auto">
+                <TurfCard turf={t} />
+              </div>
+            ))}
             {topRatedTurfs.length === 0 && (
-              <p className="text-xs text-slate-500 col-span-full py-6 text-center">No featured turfs available in your location.</p>
+              <p className="text-xs text-slate-500 w-full shrink-0 sm:col-span-full py-6 text-center">No featured turfs available in your location.</p>
             )}
           </div>
         )}
@@ -308,40 +312,40 @@ export default function Home() {
 
       {/* 4. POPULAR CITIES SECTION */}
       <section id="cities" className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-        <div className="flex justify-between items-end">
+        <div className="flex flex-wrap justify-between items-end gap-2">
           <div className="text-left">
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">Popular Cities</h2>
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">Popular Cities</h2>
             <p className="text-xs text-slate-500 font-semibold mt-0.5">Find the best turfs in your favorite cities</p>
           </div>
-          <button 
-            onClick={() => navigate('/cities')} 
-            className="text-xs font-bold text-slate-700 hover:text-black hover:underline flex items-center space-x-1"
+          <button
+            onClick={() => navigate('/cities')}
+            className="text-xs font-bold text-slate-700 hover:text-black hover:underline flex items-center space-x-1 shrink-0"
           >
             <span>View All</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+        <div className="flex overflow-x-auto gap-3 pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-4 sm:gap-6 sm:overflow-visible sm:pb-0">
           {Object.entries(cityImages).map(([c, img]) => (
-            <motion.div 
+            <motion.div
               key={c}
               whileHover={{ scale: 1.03 }}
               onClick={() => {
                 dispatch(setSearchParams({ city: c }));
                 navigate(`/search?city=${c}`);
               }}
-              className="relative rounded-2xl h-36 overflow-hidden border border-slate-100 hover:border-primary/45 cursor-pointer shadow-md group"
+              className="relative rounded-2xl h-28 sm:h-36 overflow-hidden border border-slate-100 hover:border-primary/45 cursor-pointer shadow-md group min-w-[42%] xs:min-w-[32%] shrink-0 snap-start sm:min-w-0 sm:shrink sm:w-auto"
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-black/35 z-10 transition-colors group-hover:from-black/90"></div>
-              <img 
+              <img
                 src={img}
                 alt={c}
                 className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-2">
-                <span className="text-sm font-extrabold text-white tracking-wider group-hover:text-primary transition-colors uppercase">{c}</span>
-                <span className="text-[10px] text-slate-300 font-semibold mt-0.5">Explore Arenas</span>
+                <span className="text-xs sm:text-sm font-extrabold text-white tracking-wider group-hover:text-primary transition-colors uppercase">{c}</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-300 font-semibold mt-0.5">Explore Arenas</span>
               </div>
             </motion.div>
           ))}
@@ -350,30 +354,30 @@ export default function Home() {
 
       {/* 5. PRO COACHING BANNER SECTION */}
       <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl overflow-hidden min-h-[300px] flex items-center border border-slate-200 shadow-md p-8 sm:p-12 bg-white">
+        <div className="relative rounded-3xl overflow-hidden min-h-[260px] sm:min-h-[300px] flex items-center border border-slate-200 shadow-md p-6 sm:p-8 md:p-12 bg-white">
           {/* Action Background */}
           <div className="absolute inset-0 z-0">
-            <img 
-              src="https://i.pinimg.com/1200x/df/e2/32/dfe2326abb45dbbdc051a2ec0b59d319.jpg" 
+            <img
+              src="https://i.pinimg.com/1200x/df/e2/32/dfe2326abb45dbbdc051a2ec0b59d319.jpg"
               alt="Soccer kick action"
-              className="w-full h-full object-cover "
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#FAFBFD] via-[#FAFBFD]/10 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#FAFBFD] via-[#FAFBFD]/40 sm:via-[#FAFBFD]/10 to-transparent"></div>
           </div>
 
-          <div className="relative z-10 max-w-xl space-y-5 text-left">
-            <span className="text-[10px] font-black tracking-widest text-[#5D7A00] uppercase bg-[#AAEE00]/10 border border-[#AAEE00]/20 px-3 py-1 rounded-full w-fit block">
+          <div className="relative z-10 max-w-full sm:max-w-xl space-y-4 sm:space-y-5 text-left">
+            <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-[#5D7A00] uppercase bg-[#AAEE00]/10 border border-[#AAEE00]/20 px-3 py-1 rounded-full w-fit block">
               BREAK THE LIMITS
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 leading-tight">
               Pro Coaching Available
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
               Level up your game with certified trainers for Tennis, Football, and Cricket. Personalized regimes, masterclasses, and match simulation.
             </p>
-            <button 
+            <button
               onClick={handleProgramExplore}
-              className="px-6 py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md focus:outline-none"
+              className="px-5 sm:px-6 py-3 sm:py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md focus:outline-none"
             >
               Explore Programs
             </button>
@@ -384,38 +388,38 @@ export default function Home() {
       {/* 6. SPORTS PROGRAMS & COURSES GRID */}
       <section id="programs" className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-left">
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900">Sports Programs & Courses</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900">Sports Programs & Courses</h2>
           <p className="text-xs text-slate-500 font-semibold mt-0.5">Learn from the pros and level up your game</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="flex overflow-x-auto gap-4 pb-2 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
           {programs.map((prog) => (
-            <motion.div 
+            <motion.div
               key={prog.id}
               whileHover={{ y: -5 }}
-              className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full"
+              className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm flex flex-col h-full min-w-[82%] xs:min-w-[62%] shrink-0 snap-start sm:min-w-0 sm:shrink sm:w-auto"
             >
-              <div className="h-44 overflow-hidden relative">
-                <img 
-                  src={prog.image} 
-                  alt={prog.title} 
+              <div className="h-40 sm:h-44 overflow-hidden relative">
+                <img
+                  src={prog.image}
+                  alt={prog.title}
                   className="w-full h-full object-cover"
                 />
                 <span className="absolute top-3 left-3 bg-primary text-black font-extrabold text-[9px] uppercase px-2 py-0.5 rounded">
                   {prog.sport}
                 </span>
               </div>
-              <div className="p-5 flex flex-col justify-between flex-grow space-y-4 text-left">
+              <div className="p-4 sm:p-5 flex flex-col justify-between flex-grow space-y-3 sm:space-y-4 text-left">
                 <div className="space-y-2">
-                  <h4 className="text-base font-black text-slate-900">{prog.title}</h4>
+                  <h4 className="text-sm sm:text-base font-black text-slate-900">{prog.title}</h4>
                   <p className="text-xs text-slate-500 font-medium leading-relaxed">{prog.desc}</p>
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 space-y-1">
                   <div className="text-[10px] text-slate-500 font-semibold">Timings: <span className="text-slate-800 font-bold">{prog.timing}</span></div>
-                  <div className="flex justify-between items-center pt-2">
+                  <div className="flex flex-wrap justify-between items-center gap-2 pt-2">
                     <span className="text-sm font-black text-[#5D7A00]">{prog.price}</span>
-                    <button 
+                    <button
                       onClick={handleProgramExplore}
                       className="px-4 py-2 border border-slate-200 hover:border-slate-400 text-slate-700 hover:text-black rounded-xl text-xs font-bold transition-all"
                     >
@@ -431,30 +435,31 @@ export default function Home() {
 
       {/* 7. CORPORATE & BULK BOOKINGS SECTION */}
       <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative rounded-3xl overflow-hidden min-h-[300px] flex items-center justify-end border border-slate-200 shadow-md p-8 sm:p-12 bg-white">
+        <div className="relative rounded-3xl overflow-hidden min-h-[260px] sm:min-h-[300px] flex items-center justify-center sm:justify-end border border-slate-200 shadow-md p-6 sm:p-8 md:p-12 bg-white">
           {/* Action Background */}
           <div className="absolute inset-0 z-0">
-            <img 
-              src="https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&w=1200&q=80" 
+            <img
+              src="https://images.unsplash.com/photo-1544698310-74ea9d1c8258?auto=format&fit=crop&w=1200&q=80"
               alt="Indoor court background"
               className="w-full h-full object-cover"
             />
+            <div className="absolute inset-0 bg-[#FAFBFD]/50 sm:bg-transparent"></div>
             <div className="absolute inset-0 bg-gradient-to-l from-[#FAFBFD] via-[#FAFBFD]/20 to-transparent"></div>
           </div>
 
-          <div className="relative z-10 max-w-xl space-y-5 text-right flex flex-col items-end">
-            <span className="text-[10px] font-black tracking-widest text-[#5D7A00] uppercase bg-[#AAEE00]/10 border border-[#AAEE00]/20 px-3 py-1 rounded-full w-fit block">
+          <div className="relative z-10 max-w-full sm:max-w-xl space-y-4 sm:space-y-5 text-center sm:text-right flex flex-col items-center sm:items-end">
+            <span className="text-[9px] sm:text-[10px] font-black tracking-widest text-[#5D7A00] uppercase bg-[#AAEE00]/10 border border-[#AAEE00]/20 px-3 py-1 rounded-full w-fit block">
               FOR ENTERPRISES
             </span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 leading-tight">
               Corporate & Bulk Bookings
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed max-w-sm">
               Find your next team building event or tournament at our world-class facilities. Special pricing, customized catering, and tournament organizing support.
             </p>
-            <a 
+            <a
               href="mailto:corporate@turfbook.com?subject=Corporate%20Booking%20Inquiry"
-              className="px-6 py-3 border border-slate-200 hover:border-slate-400 text-slate-700 hover:text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all focus:outline-none"
+              className="px-5 sm:px-6 py-3 border border-slate-200 hover:border-slate-400 text-slate-700 hover:text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all focus:outline-none"
             >
               Contact Sales
             </a>
@@ -465,9 +470,9 @@ export default function Home() {
       {/* 8. BECOME AN OWNER SECTION */}
       {user?.role !== 'user' && (
         <section className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-slate-100 border border-slate-200 p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm text-left">
+          <div className="bg-slate-100 border border-slate-200 p-6 sm:p-8 rounded-3xl flex flex-col md:flex-row justify-between items-center gap-5 sm:gap-6 shadow-sm text-center md:text-left">
             <div className="space-y-1 max-w-xl">
-              <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <h3 className="text-lg sm:text-xl font-black text-slate-900 flex flex-wrap items-center justify-center md:justify-start gap-2">
                 <Sparkles className="w-5 h-5 text-[#5D7A00]" />
                 <span>List Your Sports Arena</span>
               </h3>
@@ -475,7 +480,7 @@ export default function Home() {
                 Are you a turf owner? Partner with TurfBook to list your courts, manage bookings in real-time, block dates, and run targeted promotions to maximize revenues.
               </p>
             </div>
-            <button 
+            <button
               onClick={() => navigate('/become-partner')}
               className="px-6 py-3.5 bg-primary hover:bg-[#BBEF11] text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-md shrink-0 text-center w-full md:w-auto cursor-pointer"
             >

@@ -43,6 +43,16 @@ export const authService = {
     }
     return res.data;
   },
+  googleLogin: async (credentialData) => {
+    const payload = typeof credentialData === 'string'
+      ? { credential: credentialData }
+      : credentialData;
+    const res = await api.post('/auth/google', payload);
+    if (res.data.success && res.data.token) {
+      localStorage.setItem('tb_token', res.data.token);
+    }
+    return res.data;
+  },
   register: async (userData) => {
     const res = await api.post('/auth/register', userData);
     if (res.data.success && res.data.token) {
