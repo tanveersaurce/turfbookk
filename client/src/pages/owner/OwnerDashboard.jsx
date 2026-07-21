@@ -211,6 +211,18 @@ export default function OwnerDashboard() {
     try {
       const data = await ownerService.getDashboard(user?.email || 'o1');
       setDashboardData(data);
+      if (data?.turfs) {
+        setSelectedTurfForManage(prev => {
+          if (!prev) return null;
+          const fresh = data.turfs.find(t => (t.id || t._id) === (prev.id || prev._id));
+          return fresh || prev;
+        });
+        setSelectedTurfForSlots(prev => {
+          if (!prev) return null;
+          const fresh = data.turfs.find(t => (t.id || t._id) === (prev.id || prev._id));
+          return fresh || prev;
+        });
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -521,6 +533,143 @@ export default function OwnerDashboard() {
   }
 
   const { overview, bookings, turfs } = dashboardData;
+
+  // Calculate dynamic values for the currently managed turf if selected
+  let totalBookingsVal = 0;
+  let revenueVal = 0;
+  let ratingVal = 0;
+  let reviewsCount = 0;
+  let occupancyRateVal = 0;
+  
+  let popularSlot = 'No bookings yet';
+  let topSport = 'N/A';
+  let topSportBookings = 0;
+  let peakDay = 'N/A';
+  let peakDayOcc = 0;
+
+  if (selectedTurfForManage) {
+    const arenaBookings = (bookings || []).filter(b => b.turfName === selectedTurfForManage.name);
+    totalBookingsVal = arenaBookings.length;
+    
+    revenueVal = arenaBookings
+      .filter(b => b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid')
+      .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+      
+    ratingVal = selectedTurfForManage.rating || 0.0;
+    reviewsCount = selectedTurfForManage.totalReviews || 0;
+    
+    const totalHoursPerDay = 16;
+    const totalSlotsMonth = totalHoursPerDay * 30;
+    const bookedSlotsCount = arenaBookings
+      .filter(b => b.status?.toLowerCase() !== 'cancelled')
+      .reduce((sum, b) => sum + (b.slots?.length || 1), 0);
+    occupancyRateVal = totalSlotsMonth > 0 
+      ? Math.min(Math.round((bookedSlotsCount / totalSlotsMonth) * 100), 100) 
+      : 0;
+
+    // Quick Insights calculations
+    const allSlots = arenaBookings.flatMap(b => b.slots || []);
+    const slotCounts = allSlots.reduce((acc, slot) => {
+      acc[slot] = (acc[slot] || 0) + 1;
+      return acc;
+    }, {});
+    popularSlot = Object.keys(slotCounts).length > 0 
+      ? Object.keys(slotCounts).reduce((a, b) => slotCounts[a] > slotCounts[b] ? a : b)
+      : 'No bookings yet';
+
+    const sportCounts = arenaBookings.reduce((acc, b) => {
+      acc[b.sport] = (acc[b.sport] || 0) + 1;
+      return acc;
+    }, {});
+    topSport = Object.keys(sportCounts).length > 0 
+      ? Object.keys(sportCounts).reduce((a, b) => sportCounts[a] > sportCounts[b] ? a : b)
+      : selectedTurfForManage.sports?.[0] || 'N/A';
+    topSportBookings = sportCounts[topSport] || 0;
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dayCounts = arenaBookings.reduce((acc, b) => {
+      try {
+        const day = dayNames[new Date(b.date).getDay()];
+        if (day) {
+          acc[day] = (acc[day] || 0) + 1;
+        }
+      } catch {}
+      return acc;
+    }, {});
+    peakDay = Object.keys(dayCounts).length > 0 
+      ? Object.keys(dayCounts).reduce((a, b) => dayCounts[a] > dayCounts[b] ? a : b)
+      : 'N/A';
+    peakDayOcc = Object.keys(dayCounts).length > 0
+      ? Math.min(Math.round((dayCounts[peakDay] / arenaBookings.length) * 100), 100)
+      : 0;
+  }
+
+  // Calculate dynamic weekly revenue trend for last 4 weeks (30 days)
+  const now = new Date();
+  const weeklyRevenue = [0, 0, 0, 0];
+  (bookings || []).forEach(b => {
+    if (b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid') {
+      try {
+        const bookingDate = new Date(b.date);
+        const diffTime = Math.abs(now - bookingDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays <= 28) {
+          const weekIndex = Math.min(Math.floor((diffDays - 1) / 7), 3);
+          weeklyRevenue[3 - weekIndex] += b.totalAmount || 0;
+        }
+      } catch {}
+    }
+  });
+
+  const maxRevenue = Math.max(...weeklyRevenue, 1000);
+  const yCoords = weeklyRevenue.map(rev => 170 - (rev / maxRevenue) * 140);
+  const xCoords = [60, 220, 380, 540];
+  const pathD = `M${xCoords[0]},${yCoords[0]} L${xCoords[1]},${yCoords[1]} L${xCoords[2]},${yCoords[2]} L${xCoords[3]},${yCoords[3]}`;
+  const areaD = `M${xCoords[0]},180 L${xCoords[0]},${yCoords[0]} L${xCoords[1]},${yCoords[1]} L${xCoords[2]},${yCoords[2]} L${xCoords[3]},${yCoords[3]} L${xCoords[3]},180 Z`;
+
+  // Calculate dynamic overall peak hours slots (across all own turfs)
+  const overallSlots = (bookings || []).flatMap(b => (b.slots || []).map(s => ({ slot: s, sport: b.sport })));
+  const overallSlotCounts = overallSlots.reduce((acc, item) => {
+    const key = `${item.slot}_${item.sport}`;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sortedOverallSlots = Object.entries(overallSlotCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([key, count]) => {
+      const [time, sport] = key.split('_');
+      return {
+        time,
+        sport: sport || 'Football',
+        load: count > 1 ? `${count} Bookings` : '1 Booking'
+      };
+    });
+
+  const peakSlotsList = sortedOverallSlots.length > 0 
+    ? sortedOverallSlots 
+    : [
+        { time: '06:00 PM - 07:00 PM', sport: 'Football', load: 'Available' },
+        { time: '07:00 PM - 08:00 PM', sport: 'Cricket', load: 'Available' },
+        { time: '08:00 AM - 09:00 AM', sport: 'Badminton', load: 'Available' },
+        { time: '05:00 PM - 06:00 PM', sport: 'Football', load: 'Available' }
+      ];
+
+  // Dynamic dashboard overview metrics calculations
+  const activeBookings = (bookings || []).filter(b => b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid');
+  const totalEarningVal = activeBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  
+  const dObj = new Date();
+  const todayStrStr = `${dObj.getFullYear()}-${String(dObj.getMonth() + 1).padStart(2, '0')}-${String(dObj.getDate()).padStart(2, '0')}`;
+  const todaysBookingsCount = (bookings || []).filter(b => b.date === todayStrStr).length;
+  
+  const activeTurfsCount = (turfs || []).filter(t => t.isActive).length;
+  
+  const ratedTurfsArray = (turfs || []).filter(t => t.rating > 0);
+  const averageRatingVal = ratedTurfsArray.length > 0 
+    ? (ratedTurfsArray.reduce((sum, t) => sum + t.rating, 0) / ratedTurfsArray.length).toFixed(1)
+    : '5.0';
 
   const userInitials = getInitials(user?.name);
   const userFirstName = user?.name ? user.name.split(' ')[0] : 'Partner';
@@ -1127,9 +1276,9 @@ export default function OwnerDashboard() {
                     <div className="p-6 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                       <div className="space-y-2">
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Earning</span>
-                        <span className="block text-2xl font-black text-slate-800">₹{overview.totalRevenue}</span>
+                        <span className="block text-2xl font-black text-slate-800">₹{totalEarningVal.toLocaleString('en-IN')}</span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-[#5D7A00]">
-                          +12%
+                          Active
                         </span>
                       </div>
                       <div className="p-3.5 rounded-2xl bg-[#AAEE00]/10 text-[#5D7A00] border border-[#AAEE00]/20 shadow-sm">
@@ -1140,9 +1289,9 @@ export default function OwnerDashboard() {
                     <div className="p-6 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                       <div className="space-y-2">
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Today's Bookings</span>
-                        <span className="block text-2xl font-black text-slate-800">{overview.todayBookings}</span>
+                        <span className="block text-2xl font-black text-slate-800">{todaysBookingsCount}</span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-[#5D7A00]">
-                          +5%
+                          Today
                         </span>
                       </div>
                       <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 shadow-sm">
@@ -1153,7 +1302,7 @@ export default function OwnerDashboard() {
                     <div className="p-6 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                       <div className="space-y-2">
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Listed Arenas</span>
-                        <span className="block text-2xl font-black text-slate-800">{overview.activeTurfs}</span>
+                        <span className="block text-2xl font-black text-slate-800">{activeTurfsCount}</span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-[#5D7A00]">
                           Active
                         </span>
@@ -1166,7 +1315,7 @@ export default function OwnerDashboard() {
                     <div className="p-6 bg-white border border-slate-100 rounded-3xl flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                       <div className="space-y-2">
                         <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Rating</span>
-                        <span className="block text-2xl font-black text-slate-800">{overview.averageRating} ★</span>
+                        <span className="block text-2xl font-black text-slate-800">{averageRatingVal} ★</span>
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-[#5D7A00]">
                           Top Rated
                         </span>
@@ -1207,22 +1356,22 @@ export default function OwnerDashboard() {
                           <line x1="0" y1="60" x2="600" y2="60" stroke="#F1F5F9" strokeWidth="1" strokeDasharray="4 4" />
 
                           <path 
-                            d="M0,180 Q60,110 120,130 T240,70 T360,90 T480,40 T600,30 L600,180 L0,180 Z" 
+                            d={areaD} 
                             fill="url(#ownerChartGlow)" 
                           />
 
                           <path 
-                            d="M0,180 Q60,110 120,130 T240,70 T360,90 T480,40 T600,30" 
+                            d={pathD} 
                             fill="none" 
                             stroke="#AAEE00" 
                             strokeWidth="4" 
                             strokeLinecap="round"
                           />
 
-                          <circle cx="120" cy="130" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
-                          <circle cx="240" cy="70" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
-                          <circle cx="360" cy="90" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
-                          <circle cx="480" cy="40" r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
+                          <circle cx={xCoords[0]} cy={yCoords[0]} r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
+                          <circle cx={xCoords[1]} cy={yCoords[1]} r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
+                          <circle cx={xCoords[2]} cy={yCoords[2]} r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
+                          <circle cx={xCoords[3]} cy={yCoords[3]} r="5" fill="#20242B" stroke="#AAEE00" strokeWidth="2.5" />
                         </svg>
                       </div>
 
@@ -1244,12 +1393,7 @@ export default function OwnerDashboard() {
                         </div>
 
                         <div className="space-y-2.5">
-                          {[
-                            { time: '06:00 PM - 08:00 PM', sport: 'Football', load: '98% Full' },
-                            { time: '05:00 PM - 07:00 PM', sport: 'Box Cricket', load: '85% Full' },
-                            { time: '08:00 AM - 10:00 AM', sport: 'Badminton', load: '80% Full' },
-                            { time: '07:00 PM - 09:00 PM', sport: 'Cricket', load: '75% Full' },
-                          ].map((s, idx) => (
+                          {peakSlotsList.map((s, idx) => (
                             <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs hover:bg-white/10 transition-colors">
                               <div>
                                 <span className="block font-bold text-white">{s.time}</span>
@@ -1385,13 +1529,13 @@ export default function OwnerDashboard() {
                             </div>
                             <div className="flex items-center space-x-1.5 text-xs text-slate-300 font-semibold">
                               <Star className="w-4 h-4 fill-[#FFD700] text-[#FFD700]" />
-                              <span className="text-white font-bold">{selectedTurfForManage.rating || '4.8'}/5</span>
-                              <span>({selectedTurfForManage.totalReviews || '120'} reviews)</span>
+                              <span className="text-white font-bold">{Number(ratingVal).toFixed(1)}/5</span>
+                              <span>({reviewsCount} reviews)</span>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3.5">
                             <Link 
-                              to={`/turfs/${selectedTurfForManage.id}`} 
+                              to={`/turf/${selectedTurfForManage.id}`} 
                               target="_blank"
                               className="px-4 py-2.5 border border-white/35 hover:border-white text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center space-x-1.5"
                             >
@@ -1413,8 +1557,8 @@ export default function OwnerDashboard() {
                         <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Bookings</span>
                           <div className="flex items-baseline justify-between mt-2">
-                            <span className="text-2xl font-black text-slate-800">{bookings.filter(b => b.turfName === selectedTurfForManage.name).length || 248}</span>
-                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+12% ↑</span>
+                            <span className="text-2xl font-black text-slate-800">{totalBookingsVal}</span>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Active</span>
                           </div>
                         </div>
                         {/* REVENUE */}
@@ -1422,17 +1566,17 @@ export default function OwnerDashboard() {
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Revenue</span>
                           <div className="flex items-baseline justify-between mt-2">
                             <span className="text-2xl font-black text-slate-800">
-                              ₹{(bookings.filter(b => b.turfName === selectedTurfForManage.name && b.status === 'confirmed').reduce((sum, b) => sum + b.totalAmount, 0) || 124800).toLocaleString('en-IN')}
+                              ₹{revenueVal.toLocaleString('en-IN')}
                             </span>
-                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">+8% ↑</span>
+                            <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Earnings</span>
                           </div>
                         </div>
                         {/* RATING */}
                         <div className="p-6 bg-white border border-slate-100 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-all">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</span>
                           <div className="flex items-baseline justify-between mt-2">
-                            <span className="text-2xl font-black text-slate-800">{selectedTurfForManage.rating || '4.9'}/5</span>
-                            <span className="text-[#FFD700] text-sm">📈</span>
+                            <span className="text-2xl font-black text-slate-800">{Number(ratingVal).toFixed(1)}/5</span>
+                            <span className="text-[#FFD700] text-sm">★</span>
                           </div>
                         </div>
                         {/* OCCUPANCY RATE */}
@@ -1440,10 +1584,10 @@ export default function OwnerDashboard() {
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Occupancy Rate</span>
                           <div className="space-y-2 mt-2">
                             <div className="flex justify-between items-baseline">
-                              <span className="text-2xl font-black text-slate-800">65%</span>
+                              <span className="text-2xl font-black text-slate-800">{occupancyRateVal}%</span>
                             </div>
                             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                              <div className="bg-[#AAEE00] h-full w-[65%] rounded-full"></div>
+                              <div className="bg-[#AAEE00] h-full rounded-full" style={{ width: `${occupancyRateVal}%` }}></div>
                             </div>
                           </div>
                         </div>
@@ -1595,7 +1739,7 @@ export default function OwnerDashboard() {
                                     </div>
                                     <div className="text-left">
                                       <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">POPULAR SLOT</span>
-                                      <span className="block text-xs font-black">6:00 PM - 7:00 PM</span>
+                                      <span className="block text-xs font-black">{popularSlot}</span>
                                     </div>
                                   </div>
 
@@ -1606,7 +1750,7 @@ export default function OwnerDashboard() {
                                     <div className="text-left">
                                       <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">TOP SPORT</span>
                                       <span className="block text-xs font-black capitalize">
-                                        {selectedTurfForManage.sports?.[0] || 'Football'} (182 bookings)
+                                        {topSport} ({topSportBookings} bookings)
                                       </span>
                                     </div>
                                   </div>
@@ -1617,7 +1761,9 @@ export default function OwnerDashboard() {
                                     </div>
                                     <div className="text-left">
                                       <span className="block text-[8px] text-slate-400 font-bold uppercase tracking-wider">PEAK DAY</span>
-                                      <span className="block text-xs font-black">Saturday (92% Occ.)</span>
+                                      <span className="block text-xs font-black">
+                                        {peakDay === 'N/A' ? 'No bookings yet' : `${peakDay} (${peakDayOcc}% Occ.)`}
+                                      </span>
                                     </div>
                                   </div>
                                 </div>

@@ -437,7 +437,7 @@ export const ownerService = {
     }));
 
     // Calculate overview statistics
-    const confirmedPaidBookings = bookings.filter(b => b.status === 'confirmed' || b.paymentStatus === 'paid');
+    const confirmedPaidBookings = bookings.filter(b => b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid');
     const totalRevenue = confirmedPaidBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
     
     const d = new Date();
@@ -461,15 +461,21 @@ export const ownerService = {
       bookings,
       turfs: turfs.map(t => ({
         id: t._id,
+        _id: t._id,
         name: t.name,
         description: t.description,
         city: t.city,
         area: t.area,
         address: t.address,
-        pincode: t.rules || '',
+        pincode: t.pincode || '',
         isActive: t.isActive,
         isApproved: t.isApproved,
         images: t.images && t.images.length > 0 ? t.images : ['https://images.unsplash.com/photo-1518605072045-941297a9bae1?auto=format&fit=crop&w=800&q=80'],
+        pricePerHour: t.pricePerHour,
+        rating: t.rating || 0,
+        totalReviews: t.totalReviews || 0,
+        amenities: t.amenities || [],
+        rules: t.rules || '',
         pricing: {
           Football: t.pricePerHour,
           Cricket: t.pricePerHour + 200,

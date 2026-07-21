@@ -1,15 +1,42 @@
 import React from 'react';
-import { AreaChart, Calendar, Target, Award } from 'lucide-react';
+import { AreaChart, Calendar, Target } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function RevenueChart({ type = 'line', data }) {
+export default function RevenueChart({ type = 'line', bookings = [] }) {
+  const activeBookings = bookings.filter(b => b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid');
+
   if (type === 'donut') {
-    // Custom SVG Donut Chart representation
-    const sportsData = [
-      { name: 'Football', value: 55, color: '#00C853' },
-      { name: 'Cricket', value: 30, color: '#FFD600' },
-      { name: 'Badminton', value: 15, color: '#FF3D57' },
-    ];
+    // Calculate dynamic sports share
+    const totalActiveBookings = activeBookings.length;
+    const sportsCount = activeBookings.reduce((acc, b) => {
+      const sportName = b.sport ? b.sport.charAt(0).toUpperCase() + b.sport.slice(1).toLowerCase() : 'Football';
+      acc[sportName] = (acc[sportName] || 0) + 1;
+      return acc;
+    }, {});
+
+    const colors = ['#00C853', '#FFD600', '#FF3D57', '#2196F3', '#9C27B0'];
+    const sportsData = Object.entries(sportsCount).map(([name, count], index) => ({
+      name,
+      value: totalActiveBookings > 0 ? Math.round((count / totalActiveBookings) * 100) : 0,
+      color: colors[index % colors.length]
+    }));
+
+    if (sportsData.length === 0) {
+      sportsData.push({ name: 'Football', value: 100, color: '#00C853' });
+    }
+
+    // SVG Slices
+    let currentOffset = 0;
+    const slices = sportsData.map((item) => {
+      const dashArray = `${item.value} ${100 - item.value}`;
+      const dashOffset = currentOffset;
+      currentOffset -= item.value;
+      return {
+        ...item,
+        dashArray,
+        dashOffset
+      };
+    });
 
     return (
       <div className="p-6 bg-cardbg border border-white/5 rounded-2xl space-y-4">
@@ -23,21 +50,13 @@ export default function RevenueChart({ type = 'line', data }) {
           <div className="relative w-36 h-36">
             <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
               <circle cx="18" cy="18" r="15.915" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="3" />
-              {/* Football slice (55%) */}
-              <circle 
-                cx="18" cy="18" r="15.915" fill="none" stroke="#00C853" strokeWidth="3" 
-                strokeDasharray="55 45" strokeDashoffset="0" 
-              />
-              {/* Cricket slice (30%) */}
-              <circle 
-                cx="18" cy="18" r="15.915" fill="none" stroke="#FFD600" strokeWidth="3" 
-                strokeDasharray="30 70" strokeDashoffset="-55" 
-              />
-              {/* Badminton slice (15%) */}
-              <circle 
-                cx="18" cy="18" r="15.915" fill="none" stroke="#FF3D57" strokeWidth="3" 
-                strokeDasharray="15 85" strokeDashoffset="-85" 
-              />
+              {slices.map((slice, idx) => (
+                <circle 
+                  key={idx}
+                  cx="18" cy="18" r="15.915" fill="none" stroke={slice.color} strokeWidth="3" 
+                  strokeDasharray={slice.dashArray} strokeDashoffset={slice.dashOffset} 
+                />
+              ))}
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-xl font-extrabold text-white">100%</span>
@@ -62,7 +81,36 @@ export default function RevenueChart({ type = 'line', data }) {
     );
   }
 
-  // DEFAULT: LINE / AREA CHART
+  // DEFAULT: LINE / AREA CHART (Dynamic 7 Days Revenue Trend)
+  const getPast7Days = () => {
+    const days = [];
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      days.push({
+        dateStr,
+        label: dayNames[d.getDay()]
+      });
+    }
+    return days;
+  };
+
+  const past7Days = getPast7Days();
+  const dailyRevenue = past7Days.map(day => {
+    return activeBookings
+      .filter(b => b.date === day.dateStr)
+      .reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  });
+
+  const maxDailyRev = Math.max(...dailyRevenue, 1000);
+  const xCoords = [20, 110, 200, 290, 380, 470, 560];
+  const yCoords = dailyRevenue.map(rev => 170 - (rev / maxDailyRev) * 140);
+
+  const pathD = `M${xCoords[0]},${yCoords[0]} L${xCoords[1]},${yCoords[1]} L${xCoords[2]},${yCoords[2]} L${xCoords[3]},${yCoords[3]} L${xCoords[4]},${yCoords[4]} L${xCoords[5]},${yCoords[5]} L${xCoords[6]},${yCoords[6]}`;
+  const areaD = `M${xCoords[0]},180 L${xCoords[0]},${yCoords[0]} L${xCoords[1]},${yCoords[1]} L${xCoords[2]},${yCoords[2]} L${xCoords[3]},${yCoords[3]} L${xCoords[4]},${yCoords[4]} L${xCoords[5]},${yCoords[5]} L${xCoords[6]},${yCoords[6]} L${xCoords[6]},180 Z`;
+
   return (
     <div className="p-6 bg-cardbg border border-white/5 rounded-2xl space-y-4">
       <div className="flex justify-between items-center">
@@ -86,13 +134,13 @@ export default function RevenueChart({ type = 'line', data }) {
 
           {/* Area under the line */}
           <path 
-            d="M0,180 Q100,140 200,150 T400,90 T600,60 L600,180 L0,180 Z" 
+            d={areaD} 
             fill="url(#areaGlow)" 
           />
 
           {/* Line Path */}
           <path 
-            d="M0,180 Q100,140 200,150 T400,90 T600,60" 
+            d={pathD} 
             fill="none" 
             stroke="#00C853" 
             strokeWidth="3.5" 
@@ -100,9 +148,9 @@ export default function RevenueChart({ type = 'line', data }) {
           />
 
           {/* Glowing Points */}
-          <circle cx="200" cy="150" r="5" fill="#00C853" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-          <circle cx="400" cy="90" r="5" fill="#00C853" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
-          <circle cx="600" cy="60" r="5" fill="#00C853" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+          {xCoords.map((x, idx) => (
+            <circle key={idx} cx={x} cy={yCoords[idx]} r="5" fill="#00C853" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+          ))}
 
           {/* Definitions for Glow gradients */}
           <defs>
@@ -116,13 +164,9 @@ export default function RevenueChart({ type = 'line', data }) {
 
       {/* X Axis Labels */}
       <div className="flex justify-between px-2 text-[10px] text-muted font-bold uppercase tracking-wider">
-        <span>Mon</span>
-        <span>Tue</span>
-        <span>Wed</span>
-        <span>Thu</span>
-        <span>Fri</span>
-        <span>Sat</span>
-        <span>Sun</span>
+        {past7Days.map((day, idx) => (
+          <span key={idx}>{day.label}</span>
+        ))}
       </div>
     </div>
   );

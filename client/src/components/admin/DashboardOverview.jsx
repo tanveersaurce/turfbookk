@@ -6,6 +6,41 @@ import { TrendingUp, Award, UserCheck, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function DashboardOverview({ stats, bookings }) {
+  const activeBookings = (bookings || []).filter(b => b.status?.toLowerCase() === 'confirmed' || b.paymentStatus?.toLowerCase() === 'paid');
+  
+  // Calculate dynamic stats
+  const dynamicGmv = activeBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+  const dynamicRevenue = Math.round(dynamicGmv * 0.10); // 10% commission
+
+  // Calculate dynamic peak booking hours
+  const overallSlots = (bookings || []).flatMap(b => (b.slots || []).map(s => ({ slot: s, sport: b.sport })));
+  const overallSlotCounts = overallSlots.reduce((acc, item) => {
+    const key = `${item.slot}_${item.sport}`;
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const sortedOverallSlots = Object.entries(overallSlotCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([key, count]) => {
+      const [time, sport] = key.split('_');
+      return {
+        time,
+        sport: sport || 'Football',
+        load: count > 1 ? `${count} Bookings` : '1 Booking'
+      };
+    });
+
+  const peakSlotsList = sortedOverallSlots.length > 0 
+    ? sortedOverallSlots 
+    : [
+        { time: '05:00 PM - 07:00 PM', sport: 'Football', load: 'Available' },
+        { time: '07:00 PM - 09:00 PM', sport: 'Cricket', load: 'Available' },
+        { time: '08:00 AM - 10:00 AM', sport: 'Badminton', load: 'Available' },
+        { time: '06:00 PM - 08:00 PM', sport: 'Box Cricket', load: 'Available' }
+      ];
+
   return (
     <motion.div
       key="overview"
@@ -18,16 +53,16 @@ export default function DashboardOverview({ stats, bookings }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatsCard
           title="Total Platform GMV"
-          value={`₹${stats.gmv}`}
-          change="+18%"
+          value={`₹${dynamicGmv.toLocaleString('en-IN')}`}
+          change="Active"
           icon={TrendingUp}
           color="primary"
         />
 
         <StatsCard
           title="Platform Revenue"
-          value={`₹${stats.revenue}`}
-          change="+10%"
+          value={`₹${dynamicRevenue.toLocaleString('en-IN')}`}
+          change="Earnings"
           icon={Award}
           color="accent"
         />
@@ -35,7 +70,7 @@ export default function DashboardOverview({ stats, bookings }) {
         <StatsCard
           title="Active Turf Arenas"
           value={stats.totalTurfs}
-          change="+5%"
+          change="Approved"
           icon={UserCheck}
           color="success"
         />
@@ -43,7 +78,7 @@ export default function DashboardOverview({ stats, bookings }) {
         <StatsCard
           title="Registered Users"
           value={stats.totalUsers}
-          change="+12%"
+          change="Registered"
           icon={Users}
           color="danger"
         />
@@ -53,7 +88,7 @@ export default function DashboardOverview({ stats, bookings }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* SVG Area line chart reused */}
         <div className="lg:col-span-2">
-          <RevenueChart data={stats} />
+          <RevenueChart bookings={bookings} />
         </div>
 
         {/* Dark peak hours card */}
@@ -66,12 +101,7 @@ export default function DashboardOverview({ stats, bookings }) {
             </div>
 
             <div className="space-y-2.5">
-              {[
-                { time: '05:00 PM - 07:00 PM', sport: 'Football', load: '95% Peak' },
-                { time: '07:00 PM - 09:00 PM', sport: 'Cricket', load: '90% Peak' },
-                { time: '08:00 AM - 10:00 AM', sport: 'Badminton', load: '80% Peak' },
-                { time: '06:00 PM - 08:00 PM', sport: 'Box Cricket', load: '75% Peak' },
-              ].map((s, idx) => (
+              {peakSlotsList.map((s, idx) => (
                 <div key={idx} className="flex justify-between items-center p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs hover:bg-white/10 transition-colors">
                   <div>
                     <span className="block font-bold text-white">{s.time}</span>
