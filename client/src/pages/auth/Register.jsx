@@ -67,22 +67,8 @@ export default function Register() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const userEmail = window.prompt("Enter your Google Account Email:", "");
-    if (!userEmail || !userEmail.trim()) return;
-
-    dispatch(authStart());
-    try {
-      const data = await authService.googleLogin({ email: userEmail.trim() });
-      dispatch(authSuccess(data));
-      if (currentBooking?.turfId) {
-        navigate('/checkout');
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      dispatch(authFailure(err.message || 'Google Auth Failed'));
-    }
+  const handleGoogleLogin = () => {
+    window.dispatchEvent(new CustomEvent('show-login', { detail: { mode: 'google_select' } }));
   };
 
   return (

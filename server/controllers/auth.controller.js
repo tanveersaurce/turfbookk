@@ -314,11 +314,33 @@ export const ownerApply = async (req, res, next) => {
 // @access  Public
 export const googleAuth = async (req, res, next) => {
   try {
-    const { credential, email, name } = req.body;
+    let { credential, email, name } = req.body;
 
-    // Default fallback or mock Google email/name for demo OAuth logins
-    const userEmail = (email || 'google.user@gmail.com').toLowerCase();
-    const userName = name || 'Google User';
+    // Decode Google ID Token (JWT) if passed
+    if (credential && credential !== 'mock_credential') {
+      try {
+        const parts = credential.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+          if (payload.email) email = payload.email;
+          if (payload.name) name = payload.name;
+        }
+      } catch (err) {
+        console.warn('Could not parse Google credential token:', err.message);
+      }
+    }
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid Google email address.',
+      });
+    }
+
+    const userEmail = email.toLowerCase().trim();
+    const rawName = name || userEmail.split('@')[0];
+    // Capitalize name neatly
+    const userName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
     // Find existing user or create a new user account
     let user = await User.findOne({ email: userEmail });

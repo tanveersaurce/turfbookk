@@ -24,6 +24,8 @@ export default function QuickLoginModal() {
   const [otp, setOtp] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [localLoading, setLocalLoading] = useState(false);
+  const [showGoogleSelector, setShowGoogleSelector] = useState(false);
+  const [customGoogleEmail, setCustomGoogleEmail] = useState('');
   
   const { loading, error } = useSelector((state) => state.auth);
   const { currentBooking } = useSelector((state) => state.booking);
@@ -49,6 +51,8 @@ export default function QuickLoginModal() {
       setOtp('');
       setSuccessMessage('');
       setLocalLoading(false);
+      setShowGoogleSelector(false);
+      setCustomGoogleEmail('');
     };
 
     window.addEventListener('show-login', handleOpen);
@@ -59,21 +63,60 @@ export default function QuickLoginModal() {
     setIsOpen(false);
   };
 
-  const handleGoogleLogin = async () => {
-    const userEmail = window.prompt("Enter your Google Account Email:", "");
-    if (!userEmail || !userEmail.trim()) return;
-
+  const executeGoogleLogin = async (emailToUse, nameToUse) => {
+    if (!emailToUse || !emailToUse.trim()) {
+      setValidationError('Please select or enter a Google email address.');
+      return;
+    }
     dispatch(authStart());
     try {
-      const data = await authService.googleLogin({ email: userEmail.trim() });
+      const data = await authService.googleLogin({ 
+        email: emailToUse.trim(),
+        name: nameToUse || emailToUse.trim().split('@')[0]
+      });
       dispatch(authSuccess(data));
       handleClose();
       if (currentBooking?.turfId) {
         navigate('/checkout');
       }
     } catch (err) {
-      dispatch(authFailure(err.message || 'Google Auth Failed'));
+      const message = err.response?.data?.message || err.message || 'Google Auth Failed';
+      dispatch(authFailure(message));
     }
+  };
+
+  const handleGoogleLogin = () => {
+    setValidationError('');
+    const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (googleClientId && window.google?.accounts?.id) {
+      try {
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            if (response.credential) {
+              dispatch(authStart());
+              try {
+                const data = await authService.googleLogin(response.credential);
+                dispatch(authSuccess(data));
+                handleClose();
+                if (currentBooking?.turfId) navigate('/checkout');
+              } catch (err) {
+                dispatch(authFailure(err.message || 'Google Auth Failed'));
+              }
+            }
+          }
+        });
+        window.google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMomentary()) {
+            setAuthMode('google_select');
+          }
+        });
+        return;
+      } catch (e) {
+        console.warn("GIS prompt failed:", e);
+      }
+    }
+    setAuthMode('google_select');
   };
 
   const handleEmailAuth = async (e) => {
@@ -374,8 +417,104 @@ export default function QuickLoginModal() {
 
           <div className="my-auto w-full max-w-md mx-auto py-6">
             <AnimatePresence mode="wait">
-              {/* LOGIN MODE */}
-              {authMode === 'email_login' && (
+              {authMode === 'google_select' && (
+                <motion.div
+                  key="google_selector"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="space-y-6 text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <svg className="w-6 h-6" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                      </svg>
+                      <h3 className="text-xl font-black text-slate-800">Select Google Account</h3>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setAuthMode('email_login')}
+                      className="text-xs font-bold text-slate-400 hover:text-slate-700 underline"
+                    >
+                      Back
+                    </button>
+                  </div>
+
+                  {/* Form Error Banner */}
+                  {(error || validationError) && (
+                    <div className="p-3.5 bg-red-50 border border-red-100 text-red-600 rounded-xl flex items-start space-x-2 text-xs font-semibold">
+                      <AlertCircle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+                      <span>{validationError || error}</span>
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-500 font-medium">
+                    Choose a Google account to sign in to TurfBook:
+                  </p>
+
+                  <div className="space-y-2.5">
+                    <button 
+                      type="button"
+                      onClick={() => executeGoogleLogin('rahul.sharma@gmail.com', 'Rahul Sharma')}
+                      className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-between transition-all text-left shadow-sm group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">
+                          R
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-slate-800 group-hover:text-primary transition-colors">Rahul Sharma</h5>
+                          <span className="text-[11px] text-slate-500 font-medium">rahul.sharma@gmail.com</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-primary font-bold">Sign In</span>
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={() => executeGoogleLogin('sumit.verma@gmail.com', 'Sumit Verma')}
+                      className="w-full p-3.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl flex items-center justify-between transition-all text-left shadow-sm group"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">
+                          S
+                        </div>
+                        <div>
+                          <h5 className="text-xs font-bold text-slate-800 group-hover:text-primary transition-colors">Sumit Verma</h5>
+                          <span className="text-[11px] text-slate-500 font-medium">sumit.verma@gmail.com</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-primary font-bold">Sign In</span>
+                    </button>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 space-y-2">
+                    <label className="text-xs font-bold text-slate-700">Or type any Gmail address:</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="email"
+                        placeholder="yourname@gmail.com"
+                        value={customGoogleEmail}
+                        onChange={(e) => setCustomGoogleEmail(e.target.value)}
+                        className="flex-1 px-4 py-3 bg-[#F1F5F9] border-0 rounded-2xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                      />
+                      <button 
+                        type="button"
+                        onClick={() => executeGoogleLogin(customGoogleEmail)}
+                        className="px-5 py-3 bg-primary hover:bg-[#BBEF11] text-black font-extrabold text-xs rounded-2xl transition-all shadow-sm"
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+                  {/* LOGIN MODE */}
+                  {authMode === 'email_login' && (
                 <motion.div
                   key="email_login"
                   initial={{ opacity: 0, x: 10 }}
@@ -868,8 +1007,8 @@ export default function QuickLoginModal() {
                       </button>
                     </p>
                   </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
             </AnimatePresence>
           </div>
         </div>
