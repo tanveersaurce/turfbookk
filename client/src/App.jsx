@@ -18,6 +18,7 @@ import Register from './pages/auth/Register';
 import AdminLogin from './pages/auth/AdminLogin';
 import { ResetPassword } from './pages/auth/ResetPassword';
 import ChangePassword from './pages/auth/ChangePassword';
+import CompleteProfile from './pages/auth/CompleteProfile';
 
 // Dashboards
 import UserDashboard from './pages/user/UserDashboard';
@@ -104,6 +105,14 @@ function App() {
           {/* General Auth */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route 
+            path="/complete-profile" 
+            element={
+              <ProtectedRoute allowedRoles={['user', 'owner', 'admin']}>
+                <CompleteProfile />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Partner Onboarding Public Routes */}
           <Route path="/become-partner" element={<PartnerLanding />} />

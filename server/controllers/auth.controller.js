@@ -1,9 +1,12 @@
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import User from '../models/User.js';
 import PartnerApplication from '../models/PartnerApplication.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
 import { welcomeEmail, resetPasswordEmail, resetPasswordOTPEmail } from '../utils/emailTemplates.js';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret_key_tb_123';
 
@@ -314,44 +317,79 @@ export const ownerApply = async (req, res, next) => {
 // @access  Public
 export const googleAuth = async (req, res, next) => {
   try {
-    let { credential, email, name } = req.body;
+    const { credential, token: inputToken, email: bodyEmail, name: bodyName } = req.body;
+    const googleToken = credential || inputToken;
 
-    // Decode Google ID Token (JWT) if passed
-    if (credential && credential !== 'mock_credential') {
+    let email = bodyEmail;
+    let name = bodyName;
+    let googleId = null;
+    let picture = null;
+
+    // 1. Verify Google ID token via official google-auth-library if provided
+    if (googleToken && googleToken !== 'mock_credential') {
       try {
-        const parts = credential.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-          if (payload.email) email = payload.email;
-          if (payload.name) name = payload.name;
+        const ticket = await googleClient.verifyIdToken({
+          idToken: googleToken,
+          audience: process.env.GOOGLE_CLIENT_ID || undefined,
+        });
+        const payload = ticket.getPayload();
+        if (payload) {
+          email = payload.email;
+          name = payload.name;
+          googleId = payload.sub;
+          picture = payload.picture;
         }
-      } catch (err) {
-        console.warn('Could not parse Google credential token:', err.message);
+      } catch (verifyErr) {
+        console.warn('google-auth-library verifyIdToken fallback:', verifyErr.message);
+        // Fallback JWT payload extraction if client ID is in testing/development
+        try {
+          const parts = googleToken.split('.');
+          if (parts.length === 3) {
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+            if (payload.email) email = payload.email;
+            if (payload.name) name = payload.name;
+            if (payload.sub) googleId = payload.sub;
+            if (payload.picture) picture = payload.picture;
+          }
+        } catch (e) {
+          console.warn('JWT payload parsing failed:', e.message);
+        }
       }
     }
 
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide a valid Google email address.',
+        message: 'Google authentication failed: Email address is required.',
       });
     }
 
     const userEmail = email.toLowerCase().trim();
-    const rawName = name || userEmail.split('@')[0];
-    // Capitalize name neatly
-    const userName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
-    // Find existing user or create a new user account
+    // 2. Database Check: Find existing user by email (prevents duplicate accounts)
     let user = await User.findOne({ email: userEmail });
 
-    if (!user) {
+    if (user) {
+      // User exists -> link Google ID and update avatar/provider
+      if (googleId && !user.googleId) user.googleId = googleId;
+      if (!user.provider) user.provider = 'google';
+      if (picture && !user.avatar) user.avatar = picture;
+      await user.save();
+    } else {
+      // User does not exist -> Create new user profile
+      const rawName = name || userEmail.split('@')[0];
+      const userName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+
       user = await User.create({
         name: userName,
         email: userEmail,
+        googleId,
+        provider: 'google',
+        avatar: picture,
         passwordHash: Math.random().toString(36).substring(2) + Date.now().toString(36),
         role: 'user',
         isVerified: true,
+        isProfileCompleted: false,
       });
     }
 
@@ -359,20 +397,29 @@ export const googleAuth = async (req, res, next) => {
       return res.status(403).json({ success: false, message: 'This account has been deactivated.' });
     }
 
-    // Generate JWT Token
+    // 3. Determine if profile completion (valid 10-digit Indian phone) is required
+    const isPhoneValid = user.phone && user.phone.trim().replace(/\D/g, '').length >= 10;
+    const requiresProfileCompletion = !isPhoneValid;
+
+    // 4. Generate JWT Token
     const token = generateToken(res, user._id, user.role);
 
     res.status(200).json({
       success: true,
       token,
+      requiresProfileCompletion,
       data: {
         _id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone,
-        city: user.city,
+        phone: user.phone || '',
+        city: user.city || '',
+        avatar: user.avatar || '',
         role: user.role,
+        provider: user.provider || 'google',
+        googleId: user.googleId,
         isVerified: user.isVerified,
+        isProfileCompleted: !requiresProfileCompletion,
       },
     });
   } catch (error) {

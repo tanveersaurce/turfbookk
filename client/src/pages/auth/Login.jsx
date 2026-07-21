@@ -45,7 +45,9 @@ export default function Login() {
         } else if (role === 'owner') {
           navigate('/owner/dashboard');
         } else {
-          if (currentBooking?.turfId) {
+          if (response.requiresProfileCompletion || !response.data?.phone || response.data?.phone.trim().replace(/\D/g, '').length < 10) {
+            navigate('/complete-profile');
+          } else if (currentBooking?.turfId) {
             navigate('/checkout');
           } else {
             navigate('/');

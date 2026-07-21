@@ -28,6 +28,18 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String, // Cloudinary secure URL
   },
+  googleId: {
+    type: String,
+  },
+  provider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
+  },
+  isProfileCompleted: {
+    type: Boolean,
+    default: false,
+  },
   role: {
     type: String,
     enum: ['user', 'owner', 'admin'],

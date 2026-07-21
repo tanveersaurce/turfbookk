@@ -22,5 +22,14 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
     }
   }
 
+  // Enforce profile completion for players (requires valid 10-digit phone)
+  if (
+    user?.role === 'user' &&
+    (!user.phone || user.phone.trim().replace(/\D/g, '').length < 10) &&
+    window.location.pathname !== '/complete-profile'
+  ) {
+    return <Navigate to="/complete-profile" replace />;
+  }
+
   return children;
 };

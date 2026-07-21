@@ -31,7 +31,14 @@ export const updateUserProfile = async (req, res, next) => {
     }
 
     if (name) user.name = name;
-    if (phone) user.phone = phone;
+    if (phone !== undefined) {
+      const cleanPhone = phone.trim().replace(/\D/g, '');
+      if (cleanPhone.length < 10) {
+        return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit Indian mobile number.' });
+      }
+      user.phone = cleanPhone;
+      user.isProfileCompleted = true;
+    }
     if (city) user.city = city;
 
     const updatedUser = await user.save();
@@ -40,7 +47,14 @@ export const updateUserProfile = async (req, res, next) => {
     const responseUser = updatedUser.toObject();
     delete responseUser.passwordHash;
 
-    res.status(200).json({ success: true, data: responseUser });
+    res.status(200).json({ 
+      success: true, 
+      message: 'Profile updated successfully.',
+      data: {
+        ...responseUser,
+        isProfileCompleted: !!(updatedUser.phone && updatedUser.phone.trim().replace(/\D/g, '').length >= 10)
+      } 
+    });
   } catch (error) {
     next(error);
   }

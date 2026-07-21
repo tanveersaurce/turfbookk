@@ -76,8 +76,14 @@ export default function QuickLoginModal() {
       });
       dispatch(authSuccess(data));
       handleClose();
-      if (currentBooking?.turfId) {
+
+      const userObj = data.data;
+      if (data.requiresProfileCompletion || !userObj?.phone || userObj.phone.trim().replace(/\D/g, '').length < 10) {
+        navigate('/complete-profile');
+      } else if (currentBooking?.turfId) {
         navigate('/checkout');
+      } else {
+        navigate('/');
       }
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Google Auth Failed';
@@ -99,7 +105,15 @@ export default function QuickLoginModal() {
                 const data = await authService.googleLogin(response.credential);
                 dispatch(authSuccess(data));
                 handleClose();
-                if (currentBooking?.turfId) navigate('/checkout');
+
+                const userObj = data.data;
+                if (data.requiresProfileCompletion || !userObj?.phone || userObj.phone.trim().replace(/\D/g, '').length < 10) {
+                  navigate('/complete-profile');
+                } else if (currentBooking?.turfId) {
+                  navigate('/checkout');
+                } else {
+                  navigate('/');
+                }
               } catch (err) {
                 dispatch(authFailure(err.message || 'Google Auth Failed'));
               }
@@ -171,7 +185,9 @@ export default function QuickLoginModal() {
           } else if (loggedInUser.role === 'owner') {
             navigate('/owner/dashboard');
           } else {
-            if (currentBooking?.turfId) {
+            if (response.requiresProfileCompletion || !loggedInUser.phone || loggedInUser.phone.trim().replace(/\D/g, '').length < 10) {
+              navigate('/complete-profile');
+            } else if (currentBooking?.turfId) {
               navigate('/checkout');
             } else {
               navigate('/');
