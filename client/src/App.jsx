@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ProtectedRoute } from './guards/ProtectedRoute';
 import useAuth from './hooks/useAuth';
 
@@ -35,11 +35,24 @@ import PartnerApplications from './pages/admin/PartnerApplications';
 // Global Layout
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
-import QuickLoginModal from './components/common/QuickLoginModal';
 
 function App() {
   const { loadCurrentUser } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleShowLogin = (e) => {
+      const mode = e?.detail?.mode;
+      if (mode === 'email_register') {
+        navigate('/register');
+      } else {
+        navigate('/login');
+      }
+    };
+    window.addEventListener('show-login', handleShowLogin);
+    return () => window.removeEventListener('show-login', handleShowLogin);
+  }, [navigate]);
 
   useEffect(() => {
     if ('scrollRestoration' in window.history) {
@@ -162,9 +175,6 @@ function App() {
         </Routes>
       </main>
       <Footer />
-      
-      {/* Global Quick Login Modal (Triggers via custom event or state) */}
-      <QuickLoginModal />
     </div>
   );
 }
