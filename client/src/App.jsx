@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { ProtectedRoute } from './guards/ProtectedRoute';
+import { GuestRoute } from './guards/GuestRoute';
 import useAuth from './hooks/useAuth';
 
 // Public Pages
@@ -102,9 +103,10 @@ function App() {
             } 
           />
 
-          {/* General Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* General Auth (Guest Only) */}
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+          <Route path="/signup" element={<GuestRoute><Register /></GuestRoute>} />
           <Route 
             path="/complete-profile" 
             element={
