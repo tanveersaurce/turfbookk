@@ -4,14 +4,13 @@ import { createSlice } from '@reduxjs/toolkit';
 let savedUser = null;
 try {
   const userStr = localStorage.getItem('tb_user');
-  if (userStr && userStr !== 'undefined') {
+  if (userStr && userStr !== 'undefined' && userStr !== 'null') {
     savedUser = JSON.parse(userStr);
   }
 } catch (err) {
   console.error('Failed to parse tb_user from localStorage:', err);
 }
 const savedToken = localStorage.getItem('tb_token') || null;
-
 
 const initialState = {
   user: savedUser,
@@ -32,11 +31,21 @@ const authSlice = createSlice({
     authSuccess: (state, action) => {
       state.loading = false;
       state.isAuthenticated = true;
-      state.user = action.payload.user;
-      state.token = action.payload.token;
+      
+      const payload = action.payload || {};
+      const userObj = payload.user || payload.data || (payload._id ? payload : null);
+      const tokenStr = payload.token || localStorage.getItem('tb_token');
+      
+      state.user = userObj;
+      state.token = tokenStr;
       state.error = null;
-      localStorage.setItem('tb_user', JSON.stringify(action.payload.user));
-      localStorage.setItem('tb_token', action.payload.token);
+      
+      if (userObj) {
+        localStorage.setItem('tb_user', JSON.stringify(userObj));
+      }
+      if (tokenStr) {
+        localStorage.setItem('tb_token', tokenStr);
+      }
     },
     authFailure: (state, action) => {
       state.loading = false;

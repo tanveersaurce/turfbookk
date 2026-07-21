@@ -237,8 +237,8 @@ const MainNavbar = () => {
   };
 
   const avatarBg = user?.name ? colors[user.name.charCodeAt(0) % colors.length] : colors[0];
-  const userInitials = getInitials(user?.name);
-  const firstName = user?.name ? user.name.split(' ')[0] : 'Player';
+  const userInitials = getInitials(user?.name || user?.email);
+  const firstName = user?.name ? user.name.split(' ')[0] : (user?.email ? user.email.split('@')[0] : 'User');
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${
